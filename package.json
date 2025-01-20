@@ -1,0 +1,20 @@
+{
+  "name": "music",
+  "version": "1.0.0",
+  "description": "A Music App Backend",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon src/index.js"
+  },
+  "keywords": [
+    "Backend"
+  ],
+  "author": "Yash Dobriyal",
+  "license": "ISC",
+  "devDependencies": {
+    "nodemon": "^3.1.9",
+    "prettier": "^3.4.2"
+  }
+}
