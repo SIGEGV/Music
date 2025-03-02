@@ -200,7 +200,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
       .json(
         new apiResponse(
           200,
-          { newAccessToken, refreshToken: newRefreshToken },
+          { newAccessToken: newAccessToken, refreshToken: newRefreshToken },
           "Access Token Refreshed"
         )
       );
@@ -208,4 +208,110 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     throw new apiError(401, error?.message || "Invalid Refresh Token ");
   }
 });
-export { registerUser, loginUser, loggedoutUser, refreshAccessToken };
+
+const changeCurrentPassword = asyncHandler(async (req, res) => {
+  /* 
+      Steps: 
+        1-> take oldPassword newPassword and confirmPassword from req;
+        2-> take user from req as it is logged in ; 
+        3->  check if old password is correct or not
+        4->if correct save the new password
+        -> update the password
+  */
+
+  const { oldPassword, newPassword, confirmPassword } = req.body;
+  console.log(oldPassword, newPassword, confirmPassword);
+  const user = req.user; // got user in req as if a user can change its
+  // password it means it is loggedin and auth middleware insert user in req
+
+  try {
+    const isPasswordCorrect = await user.isPasswordCorrect(oldPassword);
+    if (!isPasswordCorrect) {
+      throw new apiError(400, "Incorrect oldPassord");
+    }
+    if (newPassword !== confirmPassword) {
+      throw new apiError(400, "New Password and Confirm Password are not same");
+    }
+    user.password = newPassword;
+    await user.save({ validateBeforeSave: false });
+    return res.status(200).json(new apiResponse(200, {}, "Password Updated"));
+  } catch (error) {
+    throw new apiError(400, error?.message || "Unauthorized Access");
+  }
+});
+
+const getCurrentUser = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user?._id).select("-password");
+  // console.log(req.user?.username);
+  return res
+    .status(200)
+    .json(new apiResponse(200, user, "Current User Fetched Succesfully "));
+});
+
+const updateUserDetail = asyncHandler(async (req, res) => {
+  try {
+    const { fullname, email } = req.body;
+    if (!fullname || !email) {
+      throw new apiError(400, "Both FullName and Email are required");
+    }
+    const user = await User.findByIdAndUpdate(
+      req.user?._id,
+      {
+        $set: {
+          fullname: fullname,
+          email: email,
+        },
+      },
+      { new: true }
+    ).select("-password");
+
+    return res
+      .status(200)
+      .json(
+        new apiResponse(
+          200,
+          { user: user },
+          "Account Detail Updated Succesfully"
+        )
+      );
+  } catch (error) {
+    throw new apiError(
+      500,
+      error?.message ||
+        "Failed to update account details. Please try again later."
+    );
+  }
+});
+
+const updateAvatar = asyncHandler(async (req, res) => {
+  const avatarLocalPath = req.file?.path;
+  if (!avatarLocalPath) {
+    throw new apiError(400, "Avatar file is missing");
+  }
+  const avatar = await uploadOnCloudinary(avatarLocalPath);
+  if (!avatar.url) {
+    throw new apiError(500, "Error While Updating Avatar");
+  }
+  const user = await User.findByIdAndUpdate(
+    req.user?._id,
+    {
+      $set: { avatar: avatar.url },
+    },
+    { new: true }
+  ).select("-password");
+
+  return res
+    .status(200)
+    .json(new apiResponse(200, { user: user }, "Avatar Updated Succesfully"));
+});
+
+export {
+  registerUser,
+  loginUser,
+  loggedoutUser,
+  refreshAccessToken,
+  changeCurrentPassword,
+  getCurrentUser,
+  updateUserDetail,
+  updateAvatar,
+};
