@@ -2,6 +2,7 @@ import { Router } from "express";
 import {
   changeCurrentPassword,
   getCurrentUser,
+  getUserContent,
   loggedoutUser,
   refreshAccessToken,
   registerUser,
@@ -34,4 +35,5 @@ router.route("/update-account").patch(verifyJWT, updateUserDetail);
 router
   .route("/update-avatar")
   .patch(verifyJWT, upload.single("avatar"), updateAvatar);
+router.route("/:userId/content").get(verifyJWT, getUserContent);
 export default router;

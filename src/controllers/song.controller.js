@@ -58,4 +58,84 @@ const uploadAudio = asyncHandler(async (req, res) => {
     .json(new apiResponse(200, songUploaded, "songUploadedSuccesfully"));
 });
 
-export { uploadAudio };
+const searchSong = asyncHandler(async (req, res) => {
+  const { query } = req.query;
+  if (!query || query.trim() === "") {
+    throw new apiError(400, "Enter the song name");
+  }
+  const songs = await Song.find({
+    title: { $regex: query, $options: "i" },
+  }).populate("owner", "username fullname  avatar");
+  if (!songs.length) {
+    throw new apiError(404, "No songs found matching your search");
+  }
+  return res
+    .status(200)
+    .json(new apiResponse(200, songs, "Songs fetched successfully"));
+});
+
+const updateSongDetail = asyncHandler(async (req, res) => {
+  const { songId } = req.params;
+  const { title, desciption } = req.body;
+  if (!title && !desciption) {
+    throw new apiError(400, "Enter either of the field to update");
+  }
+
+  const updatedSong = await Song.findByIdAndUpdate(
+    songId,
+    { $set: req.body },
+    { new: true }
+  );
+  if (!updatedSong) {
+    throw new apiError(404, "Song not found");
+  }
+  return res
+    .status(200)
+    .json(new apiResponse(200, updatedSong, "Updated the Song Detail"));
+});
+
+const deleteSong = asyncHandler(async (req, res) => {
+  const { songId } = req.params;
+  const deletedSong = await Song.findByIdAndDelete(songId);
+
+  if (!deletedSong) {
+    throw new apiError(404, "Song does not exist");
+  }
+
+  return res
+    .status(200)
+    .json(new apiResponse(200, {}, "Song Deleted Successfully"));
+});
+
+const updateThumbnail = asyncHandler(async (req, res) => {
+  const { songId } = req.params;
+  const localThumbnailPath = req.files?.thumbnail?.[0]?.path;
+  if (!localThumbnailPath) {
+    throw new apiError(400, "Upload The Thumbnail");
+  }
+  const thumbnailPath = await uploadOnCloudinary(localThumbnailPath);
+  if (!thumbnailPath) {
+    throw new apiError(500, "Failed to upload Thumbnail. Try Again");
+  }
+  const updatedSong = await Song.findByIdAndUpdate(
+    songId,
+    { $set: { thumbnail: thumbnailPath.url } },
+    { new: true }
+  );
+  if (!updatedSong) {
+    throw new apiError(404, "Song Does not Exist");
+  }
+
+  return res
+    .status(200)
+    .json(
+      new apiResponse(200, { updatedSong }, "Thumbnail Updated Succesfully")
+    );
+});
+export {
+  uploadAudio,
+  searchSong,
+  updateSongDetail,
+  deleteSong,
+  updateThumbnail,
+};

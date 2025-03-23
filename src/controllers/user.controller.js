@@ -4,6 +4,7 @@ import { User } from "../models/user.model.js";
 import { uploadOnCloudinary } from "../utils/Cloudinary.Service.js";
 import { apiResponse } from "../utils/apiResponse.js";
 import jwt from "jsonwebtoken";
+import { Song } from "../models/song.model.js";
 
 const generateAccessAndRefreshToken = async (userId) => {
   try {
@@ -305,6 +306,35 @@ const updateAvatar = asyncHandler(async (req, res) => {
     .json(new apiResponse(200, { user: user }, "Avatar Updated Succesfully"));
 });
 
+const getUserContent = asyncHandler(async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    if (!userId.match(/^[0-9a-fA-F]{24}$/)) {
+      throw new apiError(400, "Invalid User ID format");
+    }
+
+    const user = await User.findById(userId).select("username fullName avatar");
+    if (!user) {
+      throw new apiError(404, "User not found");
+    }
+
+    const songs = await Song.find({ owner: userId });
+
+    return res
+      .status(200)
+      .json(
+        new apiResponse(
+          200,
+          { user, songs },
+          "User content fetched successfully"
+        )
+      );
+  } catch (error) {
+    throw new apiError(500, "Something went wrong while fetching user content");
+  }
+});
+
 export {
   registerUser,
   loginUser,
@@ -314,4 +344,5 @@ export {
   getCurrentUser,
   updateUserDetail,
   updateAvatar,
+  getUserContent,
 };

@@ -19,15 +19,15 @@ export const uploadOnCloudinary = async (localFilePath, type = "image") => {
   try {
     if (!localFilePath) throw new apiError(400, "Invalid file path");
 
-    // ✅ Determine Cloudinary Resource Type
+    // Determine Cloudinary Resource Type
     const resourceType = type === "audio" ? "video" : "image"; // Cloudinary treats audio as "video"
 
-    // ✅ Upload file to Cloudinary
+    // Upload file to Cloudinary
     const uploadResult = await cloudinary.uploader.upload(localFilePath, {
       resource_type: resourceType,
     });
 
-    // ✅ Ensure local file is deleted after upload
+    // Ensure local file is deleted after upload
     if (fs.existsSync(localFilePath)) {
       fs.unlinkSync(localFilePath);
     }
@@ -36,7 +36,7 @@ export const uploadOnCloudinary = async (localFilePath, type = "image") => {
   } catch (error) {
     console.error("Cloudinary Upload Error:", error?.message || error);
 
-    // ✅ Ensure local file is deleted even if upload fails
+    //  Ensure local file is deleted even if upload fails
     if (fs.existsSync(localFilePath)) {
       fs.unlinkSync(localFilePath);
     }
