@@ -1,17 +1,6 @@
 import mongoose, { Schema } from "mongoose";
 import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2";
 
-const artistSchema = new Schema({
-  artist: {
-    type: mongoose.SchemaType.ObjectId,
-    ref: "User",
-  },
-  genre: {
-    type: String,
-    required: true,
-  },
-});
-
 const songSchema = new Schema(
   {
     songFile: {
@@ -47,7 +36,9 @@ const songSchema = new Schema(
       default: 0,
     },
     owner: {
-      type: artistSchema,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
     },
   },
   { timestamps: true }
