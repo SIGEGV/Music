@@ -3,7 +3,6 @@ import { apiError } from "../utils/apiError.js";
 import { Song } from "../models/song.model.js";
 import { uploadOnCloudinary } from "../utils/Cloudinary.Service.js";
 import * as mm from "music-metadata";
-import fs from "fs";
 import { apiResponse } from "../utils/apiResponse.js";
 
 const uploadAudio = asyncHandler(async (req, res) => {
