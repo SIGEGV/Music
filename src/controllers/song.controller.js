@@ -131,10 +131,53 @@ const updateThumbnail = asyncHandler(async (req, res) => {
       new apiResponse(200, { updatedSong }, "Thumbnail Updated Succesfully")
     );
 });
+
+const likeSong = asyncHandler(async (req, res) => {
+  const { songId } = req.params;
+  const userId = req.user._id;
+  const song = await Song.findById(songId).select("like likeCount");
+  if (!Array.isArray(song.like)) {
+    song.like = [];
+  }
+  if (song.like.includes(userId)) {
+    return res
+      .status(200)
+      .json(new apiResponse(200, song, "Song already liked"));
+  }
+  song.like.push(userId);
+  song.likeCount += 1;
+  await song.save({ validateBeforeSave: false });
+  return res
+    .status(200)
+    .json(new apiResponse(200, song, "Song liked Succesfully"));
+});
+
+const unlikeSong = asyncHandler(async (req, res) => {
+  const { songId } = req.params;
+  const userId = req.user._id;
+  const song = await Song.findById(songId).select("like likeCount");
+  if (!Array.isArray(song.like)) {
+    song.like = [];
+  }
+  if (!song.like.includes(userId)) {
+    return res
+      .status(200)
+      .json(new apiResponse(200, song, "Already Unliked Song "));
+  }
+  song.like = song.lik.filter((id) => id.toString() !== userId.toString());
+  song.likeCount -= 1;
+  await song.save({ validateBeforeSave: false });
+
+  return res
+    .status(200)
+    .json(new apiResponse(200, song, "Unliked song Successfully"));
+});
 export {
   uploadAudio,
   searchSong,
   updateSongDetail,
   deleteSong,
   updateThumbnail,
+  likeSong,
+  unlikeSong,
 };

@@ -35,10 +35,17 @@ const songSchema = new Schema(
       type: Number,
       default: 0,
     },
+    like: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
     owner: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
+      default: [],
     },
   },
   { timestamps: true }
