@@ -5,6 +5,11 @@ import { uploadOnCloudinary } from "../utils/Cloudinary.Service.js";
 import { apiResponse } from "../utils/apiResponse.js";
 import jwt from "jsonwebtoken";
 import { Song } from "../models/song.model.js";
+import { Otp } from "../models/otp.model.js";
+import otpGenerator from "otp-generator";
+import bcrypt from "bcrypt";
+import tempUserStorage from "../utils/tempUserStorage.js";
+import { sendOtp } from "../utils/mailService.js";
 
 const generateAccessAndRefreshToken = async (userId) => {
   try {
@@ -64,24 +69,95 @@ const registerUser = asyncHandler(async (req, res) => {
     throw new apiError(400, "Avatar file is Required");
   }
 
+  // const user = await User.create({
+  //   fullname,
+  //   email,
+  //   username: username.toLowerCase(),
+  //   password,
+  //   avatar: avatarPath.url,
+  // });
+
+  // const userCreated = await User.findById(user._id).select(
+  //   "-password -refreshToken"
+  // );
+  // if (!userCreated) {
+  //   throw new apiError(500, "Something went wrong while registering the User");
+  // }
+
+  // return res
+  //   .status(201)
+  //   .json(new apiResponse(200, userCreated, "User Succesfully created"));
+
+  tempUserStorage[email] = { fullname, username, password, avatarPath };
+  const generateOtp = otpGenerator.generate(6, {
+    upperCaseAlphabets: false,
+    specialChars: false,
+  });
+  const hashedOtp = await bcrypt.hash(generateOtp, 10);
+  await Otp.deleteMany({ email });
+  const otpCreated = await Otp.create({ email: email, otp: hashedOtp });
+  if (!otpCreated) {
+    throw new apiError(
+      500,
+      "Failed to store OTP in the database. Please try again."
+    );
+  }
+  const sent = await sendOtp(email, generateOtp);
+  if (!sent) {
+    throw new apiError(500, "Unable to sent the otp. Please Try Again Later");
+  }
+  const options = {
+    httpOnly: true,
+    secure: true,
+    maxAge: 5 * 60 * 1000,
+  };
+  return res
+    .status(200)
+    .cookie("emailForOTP", email, options)
+    .json(
+      new apiResponse(200, "OTP sent Succesfully.Redirecting to verification.")
+    );
+});
+
+const verifyUserOtpAndRegister = asyncHandler(async (req, res) => {
+  const { otp } = req.body;
+  const email = req.cookies.emailForOTP;
+  if ([otp].some((fields) => fields?.trim() === "")) {
+    throw new apiError(400, "Enter Otp");
+  }
+  const otpRecord = await Otp.findOne({ email });
+  if (!otpRecord) {
+    throw new apiError(400, "OTP expired or invalid");
+  }
+  const isMatch = await bcrypt.compare(otp, otpRecord.otp);
+  if (!isMatch) {
+    throw new apiError(400, "Invalid OTP");
+  }
+  await Otp.deleteOne({ email });
+  const userDetails = tempUserStorage[email];
+  if (!userDetails) {
+    throw new apiError(400, "Session expired. Please re-register.");
+  }
+  const { fullname, username, password, avatarPath } = userDetails;
+
   const user = await User.create({
     fullname,
     email,
-    username: username.toLowerCase(),
+    username,
     password,
     avatar: avatarPath.url,
   });
-
+  delete tempUserStorage[email];
   const userCreated = await User.findById(user._id).select(
     "-password -refreshToken"
   );
   if (!userCreated) {
     throw new apiError(500, "Something went wrong while registering the User");
   }
-
+  res.clearCookie("emailForOTP");
   return res
-    .status(201)
-    .json(new apiResponse(200, userCreated, "User Succesfully created"));
+    .status(200)
+    .json(new apiResponse(200, "User Registered Succesfully"));
 });
 
 const loginUser = asyncHandler(async (req, res) => {
@@ -345,4 +421,5 @@ export {
   updateUserDetail,
   updateAvatar,
   getUserContent,
+  verifyUserOtpAndRegister,
 };

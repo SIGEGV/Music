@@ -8,6 +8,7 @@ import {
   registerUser,
   updateAvatar,
   updateUserDetail,
+  verifyUserOtpAndRegister,
 } from "../controllers/user.controller.js";
 import { loginUser } from "../controllers/user.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
@@ -23,6 +24,7 @@ router.route("/register").post(
   ]),
   registerUser
 );
+router.route("/verify-otp").post(verifyUserOtpAndRegister);
 
 router.route("/login").post(loginUser);
 
