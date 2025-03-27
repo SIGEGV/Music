@@ -68,26 +68,6 @@ const registerUser = asyncHandler(async (req, res) => {
   if (!avatarPath) {
     throw new apiError(400, "Avatar file is Required");
   }
-
-  // const user = await User.create({
-  //   fullname,
-  //   email,
-  //   username: username.toLowerCase(),
-  //   password,
-  //   avatar: avatarPath.url,
-  // });
-
-  // const userCreated = await User.findById(user._id).select(
-  //   "-password -refreshToken"
-  // );
-  // if (!userCreated) {
-  //   throw new apiError(500, "Something went wrong while registering the User");
-  // }
-
-  // return res
-  //   .status(201)
-  //   .json(new apiResponse(200, userCreated, "User Succesfully created"));
-
   tempUserStorage[email] = { fullname, username, password, avatarPath };
   const generateOtp = otpGenerator.generate(6, {
     upperCaseAlphabets: false,
@@ -182,6 +162,16 @@ const loginUser = asyncHandler(async (req, res) => {
 
   if (!user) {
     throw new apiError(404, "Username or Email Does'nt Exist");
+  }
+
+  if (username && email) {
+    const emailUser = await User.findOne({ email });
+    if (!emailUser || emailUser.username !== username) {
+      throw new apiError(
+        400,
+        "Username and Email do not belong to the same account"
+      );
+    }
   }
 
   const isPasswordValid = await user.isPasswordCorrect(password);
