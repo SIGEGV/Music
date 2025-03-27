@@ -172,6 +172,51 @@ const unlikeSong = asyncHandler(async (req, res) => {
     .status(200)
     .json(new apiResponse(200, song, "Unliked song Successfully"));
 });
+
+const getSongAndUpdateViews = asyncHandler(async (req, res) => {
+  const { songId } = req.params;
+  const userId = req.user._id;
+  const song = await Song.findById(songId);
+  if (!song) {
+    throw new apiError(404, "Song Not Found");
+  }
+
+  if (!song.viewedBy) {
+    song.viewedBy = [];
+  }
+
+  const THIRTY_MINUTES = 30 * 60 * 1000;
+
+  const lastView = song.viewedBy.find(
+    (entry) => entry.userId.toString() === userId.toString()
+  );
+  if (lastView && new Date() - lastView.lastViewed < THIRTY_MINUTES) {
+    return res
+      .status(200)
+      .json(
+        new apiResponse(
+          200,
+          { song },
+          "Fetched Song and View already counted recently"
+        )
+      );
+  }
+  song.views += 1;
+  song.viewedBy = song.viewedBy.filter(
+    (entry) => entry.userId.toString() !== userId.toString()
+  );
+  song.viewedBy.push({ userId, lastViewed: new Date() });
+  await song.save({ validateBeforeSave: false });
+  return res
+    .status(200)
+    .json(
+      new apiResponse(
+        200,
+        { song },
+        "Fetched Song and View counted successfully"
+      )
+    );
+});
 export {
   uploadAudio,
   searchSong,
@@ -180,4 +225,5 @@ export {
   updateThumbnail,
   likeSong,
   unlikeSong,
+  getSongAndUpdateViews,
 };

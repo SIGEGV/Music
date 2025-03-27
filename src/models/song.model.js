@@ -47,6 +47,18 @@ const songSchema = new Schema(
       required: true,
       default: [],
     },
+    viewedBy: [
+      {
+        userId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+        },
+        lastViewed: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
   },
   { timestamps: true }
 );

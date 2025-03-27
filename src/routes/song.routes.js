@@ -3,6 +3,7 @@ import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import {
   deleteSong,
+  getSongAndUpdateViews,
   likeSong,
   searchSong,
   unlikeSong,
@@ -43,4 +44,5 @@ router.route("/:songId/thumbnail").patch(
 );
 router.route("/:songId/like").post(verifyJWT, likeSong);
 router.route("/:songId/unlike").post(verifyJWT, unlikeSong);
+router.route("/:songId").post(verifyJWT, getSongAndUpdateViews);
 export default router;
