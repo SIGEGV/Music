@@ -3,6 +3,7 @@ import {
   changeCurrentPassword,
   getCurrentUser,
   getUserContent,
+  getWatchHistory,
   loggedoutUser,
   refreshAccessToken,
   registerUser,
@@ -30,6 +31,7 @@ router.route("/login").post(loginUser);
 
 //secureRoutes
 router.route("/logout").post(verifyJWT, loggedoutUser);
+router.route("/watchHistory").post(verifyJWT, getWatchHistory);
 router.route("/refresh-token").post(refreshAccessToken);
 router.route("/current-user").get(verifyJWT, getCurrentUser);
 router.route("/change-password").post(verifyJWT, changeCurrentPassword);

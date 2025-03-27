@@ -2,6 +2,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { apiError } from "../utils/apiError.js";
 import { Song } from "../models/song.model.js";
 import { uploadOnCloudinary } from "../utils/Cloudinary.Service.js";
+import { User } from "../models/user.model.js";
 import * as mm from "music-metadata";
 import { apiResponse } from "../utils/apiResponse.js";
 
@@ -164,7 +165,7 @@ const unlikeSong = asyncHandler(async (req, res) => {
       .status(200)
       .json(new apiResponse(200, song, "Already Unliked Song "));
   }
-  song.like = song.lik.filter((id) => id.toString() !== userId.toString());
+  song.like = song.like.filter((id) => id.toString() !== userId.toString());
   song.likeCount -= 1;
   await song.save({ validateBeforeSave: false });
 
@@ -177,6 +178,31 @@ const getSongAndUpdateViews = asyncHandler(async (req, res) => {
   const { songId } = req.params;
   const userId = req.user._id;
   const song = await Song.findById(songId);
+  const user = await User.findById(userId);
+
+  if (!Array.isArray(user.watchHistory)) {
+    user.watchHistory = [];
+  }
+
+  const ONE_MONTH_AGO = new Date();
+  ONE_MONTH_AGO.setMonth(ONE_MONTH_AGO.getMonth() - 1);
+
+  user.watchHistory = user.watchHistory.filter(
+    (entry) => entry.watchedAt >= ONE_MONTH_AGO
+  );
+  user.watchHistory = user.watchHistory.filter(
+    (entry) => entry.song && entry.song.toString() !== songId.toString()
+  );
+  if (
+    !user.watchHistory.some(
+      (entry) => entry.song.toString() === songId.toString()
+    )
+  ) {
+    user.watchHistory.unshift({ song: songId, watchedAt: new Date() });
+  }
+
+  await user.save({ validateBeforeSave: false });
+
   if (!song) {
     throw new apiError(404, "Song Not Found");
   }

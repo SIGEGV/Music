@@ -308,11 +308,12 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
 });
 
 const getCurrentUser = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.user?._id).select("-password");
-  // console.log(req.user?.username);
+  const user = await User.findById(req.user?._id).select(
+    "-password -refreshToken"
+  );
   return res
     .status(200)
-    .json(new apiResponse(200, user, "Current User Fetched Succesfully "));
+    .json(new apiResponse(200, { user }, "Current User Fetched Succesfully "));
 });
 
 const updateUserDetail = asyncHandler(async (req, res) => {
@@ -401,6 +402,31 @@ const getUserContent = asyncHandler(async (req, res) => {
   }
 });
 
+const getWatchHistory = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+  const user = await User.findById(userId)
+    .populate({
+      path: "watchHistory.song",
+      select: "title thumbnail duration owner",
+      populate: { path: "owner", select: "username avatar" },
+    })
+    .select("watchHistory");
+
+  if (!user) {
+    throw new apiError(404, "User not found");
+  }
+
+  return res
+    .status(200)
+    .json(
+      new apiResponse(
+        200,
+        user.watchHistory,
+        "Watch History Fetched Successfully"
+      )
+    );
+});
+
 export {
   registerUser,
   loginUser,
@@ -412,4 +438,5 @@ export {
   updateAvatar,
   getUserContent,
   verifyUserOtpAndRegister,
+  getWatchHistory,
 };
