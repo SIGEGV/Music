@@ -1,8 +1,9 @@
 import { v2 as cloudinary } from "cloudinary";
 import fs from "fs";
 import { apiError } from "../utils/apiError.js"; // Import error handler
+import { FILE_DETAIL, MESSAGES, STATUS_CODES } from "./utils.constants.js";
 
-// ✅ Configure Cloudinary
+// Configure Cloudinary
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
@@ -15,12 +16,17 @@ cloudinary.config({
  * @param {string} type - Type of file: "image" or "audio"
  * @returns {Object} - Cloudinary upload result
  */
-export const uploadOnCloudinary = async (localFilePath, type = "image") => {
+export const uploadOnCloudinary = async (
+  localFilePath,
+  type = FILE_DETAIL.IMAGE
+) => {
   try {
-    if (!localFilePath) throw new apiError(400, "Invalid file path");
+    if (!localFilePath)
+      throw new apiError(STATUS_CODES.BAD_REQUEST, MESSAGES.INVALID_FILE_PATH);
 
     // Determine Cloudinary Resource Type
-    const resourceType = type === "audio" ? "video" : "image"; // Cloudinary treats audio as "video"
+    const resourceType =
+      type === FILE_DETAIL.AUDIO ? FILE_DETAIL.VIDEO : FILE_DETAIL.IMAGE; // Cloudinary treats audio as "video"
 
     // Upload file to Cloudinary
     const uploadResult = await cloudinary.uploader.upload(localFilePath, {
@@ -41,6 +47,9 @@ export const uploadOnCloudinary = async (localFilePath, type = "image") => {
       fs.unlinkSync(localFilePath);
     }
 
-    throw new apiError(500, "File upload to Cloudinary failed");
+    throw new apiError(
+      STATUS_CODES.INTERNAL_SERVER_ERROR,
+      MESSAGES.CLOUDINARY_UPLOAD_FAILED
+    );
   }
 };

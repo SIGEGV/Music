@@ -1,43 +1,69 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { apiError } from "../utils/apiError.js";
 import { Song } from "../models/song.model.js";
-import { uploadOnCloudinary } from "../utils/Cloudinary.Service.js";
+import { uploadOnCloudinary } from "../utils/Cloudinary.service.js";
 import { User } from "../models/user.model.js";
 import * as mm from "music-metadata";
 import { apiResponse } from "../utils/apiResponse.js";
+import {
+  STATUS_CODE,
+  ERROR_MESSAGES,
+  RESPONSE_MESSAGES,
+  ONE_MONTH_AGO,
+  THIRTY_MINUTES,
+} from "../controllers/controller.constants.js";
 
+/**
+ * Route to upload a song and its thumbnail.
+ * This route handles multipart file uploads for song files and thumbnail images.
+ * Only authorized users (JWT verified) can access this route.
+ *
+ * @route POST /upload
+ * @group Song - Operations related to song management
+ * @param {Object} req - The request object containing the uploaded files.
+ * @param {Object} res - The response object to return the result.
+ * @returns {Object} 200 - A success message or the uploaded song details.
+ * @returns {Object} 400 - Error message if file type is unsupported or upload failed.
+ * @returns {Object} 401 - Unauthorized access if JWT is invalid.
+ * @example
+ * POST /upload
+ */
 const uploadAudio = asyncHandler(async (req, res) => {
-  /*
-          STEPS FOR UPLOADING FILES
-          1. check if all the required fields are provided or not
-          2. check if Audio file is give if true upload it
-          3. check same for thumbnail. 
-          4. get duration and user id(from req as user is logged in)
-          4. not upload all the entries to the db.
-  */
   const { title, description } = req.body;
   if ([title, description].some((fields) => fields?.trim() === "")) {
-    throw new apiError(400, "All Fields are Required");
+    throw new apiError(STATUS_CODE.BAD_REQUEST, ERROR_MESSAGES.MISSING_FIELDS);
   }
   const audioFileLocalPath = req.files?.songFile?.[0]?.path;
   if (!audioFileLocalPath) {
-    throw new apiError(400, "Audio File is Required");
+    throw new apiError(
+      STATUS_CODE.BAD_REQUEST,
+      ERROR_MESSAGES.AUDIO_FILE_REQUIRED
+    );
   }
   const audioMetaData = await mm.parseFile(audioFileLocalPath);
   const duration = Math.round(audioMetaData?.format.duration);
 
   const audioPath = await uploadOnCloudinary(audioFileLocalPath, "audio");
   if (!audioPath) {
-    throw new apiError(500, "Failed to upload Audio file. Try Again");
+    throw new apiError(
+      STATUS_CODE.INTERNAL_SERVER_ERROR,
+      ERROR_MESSAGES.FAILED_AUDIO_UPLOAD
+    );
   }
 
   const thumbnailLocalPath = req.files?.thumbnail?.[0]?.path;
   if (!thumbnailLocalPath) {
-    throw new apiError(400, "Thumbnail File is Required");
+    throw new apiError(
+      STATUS_CODE.BAD_REQUEST,
+      ERROR_MESSAGES.THUMBNAIL_FILE_REQUIRED
+    );
   }
   const thumbnailPath = await uploadOnCloudinary(thumbnailLocalPath);
   if (!thumbnailPath) {
-    throw new apiError(500, "Failed to upload Thumbnail. Try Again");
+    throw new apiError(
+      STATUS_CODE.INTERNAL_SERVER_ERROR,
+      ERROR_MESSAGES.FAILED_THUMBNAIL_UPLOAD
+    );
   }
 
   const userId = req.user._id;
@@ -51,34 +77,85 @@ const uploadAudio = asyncHandler(async (req, res) => {
   });
   const songUploaded = await Song.findById(song._id);
   if (!songUploaded) {
-    throw new apiError(500, "Something Went Wrong While Uploading the Song");
+    throw new apiError(
+      STATUS_CODE.INTERNAL_SERVER_ERROR,
+      ERROR_MESSAGES.FAILED_SONG_UPLOAD
+    );
   }
   return res
-    .status(200)
-    .json(new apiResponse(200, songUploaded, "songUploadedSuccesfully"));
+    .status(STATUS_CODE.SUCCESS)
+    .json(
+      new apiResponse(
+        STATUS_CODE.SUCCESS,
+        songUploaded,
+        RESPONSE_MESSAGES.SONG_UPLOADED
+      )
+    );
 });
 
+/**
+ * Route to search for songs based on query parameters.
+ * This route retrieves a list of songs based on the search query.
+ * Users must be authorized via JWT to access this route.
+ *
+ * @route GET /search
+ * @group Song - Operations related to song management
+ * @param {Object} req - The request object containing the search parameters.
+ * @param {Object} res - The response object containing the search results.
+ * @returns {Array} 200 - A list of songs matching the search query.
+ * @returns {Object} 401 - Unauthorized access if JWT is invalid.
+ * @example
+ * GET /search?q=love
+ */
 const searchSong = asyncHandler(async (req, res) => {
   const { query } = req.query;
   if (!query || query.trim() === "") {
-    throw new apiError(400, "Enter the song name");
+    throw new apiError(
+      STATUS_CODE.BAD_REQUEST,
+      ERROR_MESSAGES.INVALID_SEARCH_QUERY
+    );
   }
   const songs = await Song.find({
     title: { $regex: query, $options: "i" },
   }).populate("owner", "username fullname  avatar");
   if (!songs.length) {
-    throw new apiError(404, "No songs found matching your search");
+    throw new apiError(STATUS_CODE.NOT_FOUND, ERROR_MESSAGES.SONG_NOT_FOUND);
   }
   return res
-    .status(200)
-    .json(new apiResponse(200, songs, "Songs fetched successfully"));
+    .status(STATUS_CODE.SUCCESS)
+    .json(
+      new apiResponse(
+        STATUS_CODE.SUCCESS,
+        songs,
+        RESPONSE_MESSAGES.SONG_FETCHED
+      )
+    );
 });
 
+/**
+ * Route to update the details of a song.
+ * This route allows the modification of song metadata such as title, artist, etc.
+ * Only authorized users can update song details.
+ *
+ * @route PATCH /updateSong/:songId
+ * @group Song - Operations related to song management
+ * @param {string} songId.path.required - The ID of the song to be updated.
+ * @param {Object} req - The request object containing the updated song details.
+ * @param {Object} res - The response object with the updated song data.
+ * @returns {Object} 200 - The updated song details.
+ * @returns {Object} 401 - Unauthorized access if JWT is invalid.
+ * @returns {Object} 404 - Song not found if the given song ID does not exist.
+ * @example
+ * PATCH /updateSong/12345
+ */
 const updateSongDetail = asyncHandler(async (req, res) => {
   const { songId } = req.params;
   const { title, desciption } = req.body;
   if (!title && !desciption) {
-    throw new apiError(400, "Enter either of the field to update");
+    throw new apiError(
+      STATUS_CODE.BAD_REQUEST,
+      ERROR_MESSAGES.INVALID_UPDATE_FIELDS
+    );
   }
 
   const updatedSong = await Song.findByIdAndUpdate(
@@ -87,35 +164,84 @@ const updateSongDetail = asyncHandler(async (req, res) => {
     { new: true }
   );
   if (!updatedSong) {
-    throw new apiError(404, "Song not found");
+    throw new apiError(
+      STATUS_CODE.INTERNAL_SERVER_ERROR,
+      ERROR_MESSAGES.SONG_UPDATE_FAILED
+    );
   }
   return res
-    .status(200)
-    .json(new apiResponse(200, updatedSong, "Updated the Song Detail"));
+    .status(STATUS_CODE.SUCCESS)
+    .json(
+      new apiResponse(
+        STATUS_CODE.SUCCESS,
+        updatedSong,
+        RESPONSE_MESSAGES.SONG_UPDATE_SUCCESFULLY
+      )
+    );
 });
 
+/**
+ * Route to delete a song by its ID.
+ * This route deletes the song permanently from the database.
+ * Only authorized users can delete a song.
+ *
+ * @route DELETE /delete/:songId
+ * @group Song - Operations related to song management
+ * @param {string} songId.path.required - The ID of the song to be deleted.
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object confirming song deletion.
+ * @returns {Object} 200 - Success message confirming the song was deleted.
+ * @returns {Object} 401 - Unauthorized access if JWT is invalid.
+ * @returns {Object} 404 - Song not found if the given song ID does not exist.
+ * @example
+ * DELETE /delete/12345
+ */
 const deleteSong = asyncHandler(async (req, res) => {
   const { songId } = req.params;
   const deletedSong = await Song.findByIdAndDelete(songId);
 
   if (!deletedSong) {
-    throw new apiError(404, "Song does not exist");
+    throw new apiError(STATUS_CODE.NOT_FOUND, ERROR_MESSAGES.SONG_NOT_FOUND);
   }
 
   return res
-    .status(200)
-    .json(new apiResponse(200, {}, "Song Deleted Successfully"));
+    .status(STATUS_CODE.SUCCESS)
+    .json(
+      new apiResponse(STATUS_CODE.SUCCESS, {}, ERROR_MESSAGES.SONG_DELETED)
+    );
 });
 
+/**
+ * Route to update the thumbnail of a song.
+ * This route allows users to update the thumbnail image associated with a song.
+ * Only authorized users can perform this operation.
+ *
+ * @route PATCH /:songId/thumbnail
+ * @group Song - Operations related to song management
+ * @param {string} songId.path.required - The ID of the song whose thumbnail is to be updated.
+ * @param {Object} req - The request object containing the uploaded thumbnail.
+ * @param {Object} res - The response object with the updated song thumbnail.
+ * @returns {Object} 200 - The updated song thumbnail.
+ * @returns {Object} 401 - Unauthorized access if JWT is invalid.
+ * @returns {Object} 404 - Song not found if the given song ID does not exist.
+ * @example
+ * PATCH /12345/thumbnail
+ */
 const updateThumbnail = asyncHandler(async (req, res) => {
   const { songId } = req.params;
   const localThumbnailPath = req.files?.thumbnail?.[0]?.path;
   if (!localThumbnailPath) {
-    throw new apiError(400, "Upload The Thumbnail");
+    throw new apiError(
+      STATUS_CODE.BAD_REQUEST,
+      ERROR_MESSAGES.THUMBNAIL_FILE_REQUIRED
+    );
   }
   const thumbnailPath = await uploadOnCloudinary(localThumbnailPath);
   if (!thumbnailPath) {
-    throw new apiError(500, "Failed to upload Thumbnail. Try Again");
+    throw new apiError(
+      STATUS_CODE.INTERNAL_SERVER_ERROR,
+      ERROR_MESSAGES.FAILED_THUMBNAIL_UPLOAD
+    );
   }
   const updatedSong = await Song.findByIdAndUpdate(
     songId,
@@ -123,16 +249,39 @@ const updateThumbnail = asyncHandler(async (req, res) => {
     { new: true }
   );
   if (!updatedSong) {
-    throw new apiError(404, "Song Does not Exist");
+    throw new apiError(
+      STATUS_CODE.INTERNAL_SERVER_ERROR,
+      ERROR_MESSAGES.SONG_UPDATE_FAILED
+    );
   }
 
   return res
-    .status(200)
+    .status(STATUS_CODE.SUCCESS)
     .json(
-      new apiResponse(200, { updatedSong }, "Thumbnail Updated Succesfully")
+      new apiResponse(
+        STATUS_CODE.SUCCESS,
+        { updatedSong },
+        RESPONSE_MESSAGES.THUMBNAIL_UPDATED
+      )
     );
 });
 
+/**
+ * Route to like a song by its ID.
+ * This route increments the like count of a song.
+ * Users must be authorized via JWT to like a song.
+ *
+ * @route POST /:songId/like
+ * @group Song - Operations related to song management
+ * @param {string} songId.path.required - The ID of the song to be liked.
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object confirming the song was liked.
+ * @returns {Object} 200 - Success message confirming the song was liked.
+ * @returns {Object} 401 - Unauthorized access if JWT is invalid.
+ * @returns {Object} 404 - Song not found if the given song ID does not exist.
+ * @example
+ * POST /12345/like
+ */
 const likeSong = asyncHandler(async (req, res) => {
   const { songId } = req.params;
   const userId = req.user._id;
@@ -142,17 +291,41 @@ const likeSong = asyncHandler(async (req, res) => {
   }
   if (song.like.includes(userId)) {
     return res
-      .status(200)
-      .json(new apiResponse(200, song, "Song already liked"));
+      .status(STATUS_CODE.SUCCESS)
+      .json(
+        new apiResponse(
+          STATUS_CODE.SUCCESS,
+          song,
+          RESPONSE_MESSAGES.SONG_ALREADY_LIKED
+        )
+      );
   }
   song.like.push(userId);
   song.likeCount += 1;
   await song.save({ validateBeforeSave: false });
   return res
-    .status(200)
-    .json(new apiResponse(200, song, "Song liked Succesfully"));
+    .status(STATUS_CODE.SUCCESS)
+    .json(
+      new apiResponse(STATUS_CODE.SUCCESS, song, RESPONSE_MESSAGES.SONG_LIKED)
+    );
 });
 
+/**
+ * Route to unlike a song by its ID.
+ * This route decrements the like count of a song.
+ * Users must be authorized via JWT to unlike a song.
+ *
+ * @route POST /:songId/unlike
+ * @group Song - Operations related to song management
+ * @param {string} songId.path.required - The ID of the song to be unliked.
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object confirming the song was unliked.
+ * @returns {Object} 200 - Success message confirming the song was unliked.
+ * @returns {Object} 401 - Unauthorized access if JWT is invalid.
+ * @returns {Object} 404 - Song not found if the given song ID does not exist.
+ * @example
+ * POST /12345/unlike
+ */
 const unlikeSong = asyncHandler(async (req, res) => {
   const { songId } = req.params;
   const userId = req.user._id;
@@ -162,18 +335,42 @@ const unlikeSong = asyncHandler(async (req, res) => {
   }
   if (!song.like.includes(userId)) {
     return res
-      .status(200)
-      .json(new apiResponse(200, song, "Already Unliked Song "));
+      .status(STATUS_CODE.SUCCESS)
+      .json(
+        new apiResponse(
+          STATUS_CODE.SUCCESS,
+          song,
+          RESPONSE_MESSAGES.SONG_ALREADY_UNLIKED
+        )
+      );
   }
   song.like = song.like.filter((id) => id.toString() !== userId.toString());
   song.likeCount -= 1;
   await song.save({ validateBeforeSave: false });
 
   return res
-    .status(200)
-    .json(new apiResponse(200, song, "Unliked song Successfully"));
+    .status(STATUS_CODE.SUCCESS)
+    .json(
+      new apiResponse(STATUS_CODE.SUCCESS, song, RESPONSE_MESSAGES.SONG_UNLIKED)
+    );
 });
 
+/**
+ * Route to get a song and update its view count.
+ * This route retrieves a song's details and updates the view count.
+ * Only authorized users can access this route.
+ *
+ * @route POST /:songId
+ * @group Song - Operations related to song management
+ * @param {string} songId.path.required - The ID of the song to retrieve.
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object containing the song details and updated view count.
+ * @returns {Object} 200 - The song details and the updated view count.
+ * @returns {Object} 401 - Unauthorized access if JWT is invalid.
+ * @returns {Object} 404 - Song not found if the given song ID does not exist.
+ * @example
+ * POST /12345
+ */
 const getSongAndUpdateViews = asyncHandler(async (req, res) => {
   const { songId } = req.params;
   const userId = req.user._id;
@@ -184,7 +381,6 @@ const getSongAndUpdateViews = asyncHandler(async (req, res) => {
     user.watchHistory = [];
   }
 
-  const ONE_MONTH_AGO = new Date();
   ONE_MONTH_AGO.setMonth(ONE_MONTH_AGO.getMonth() - 1);
 
   user.watchHistory = user.watchHistory.filter(
@@ -204,26 +400,24 @@ const getSongAndUpdateViews = asyncHandler(async (req, res) => {
   await user.save({ validateBeforeSave: false });
 
   if (!song) {
-    throw new apiError(404, "Song Not Found");
+    throw new apiError(STATUS_CODE.NOT_FOUND, ERROR_MESSAGES.SONG_NOT_FOUND);
   }
 
   if (!song.viewedBy) {
     song.viewedBy = [];
   }
 
-  const THIRTY_MINUTES = 30 * 60 * 1000;
-
   const lastView = song.viewedBy.find(
     (entry) => entry.userId.toString() === userId.toString()
   );
   if (lastView && new Date() - lastView.lastViewed < THIRTY_MINUTES) {
     return res
-      .status(200)
+      .status(STATUS_CODE.SUCCESS)
       .json(
         new apiResponse(
-          200,
+          STATUS_CODE.SUCCESS,
           { song },
-          "Fetched Song and View already counted recently"
+          RESPONSE_MESSAGES.SONG_VIEW_NOT_COUNTED
         )
       );
   }
@@ -234,12 +428,12 @@ const getSongAndUpdateViews = asyncHandler(async (req, res) => {
   song.viewedBy.push({ userId, lastViewed: new Date() });
   await song.save({ validateBeforeSave: false });
   return res
-    .status(200)
+    .status(STATUS_CODE.SUCCESS)
     .json(
       new apiResponse(
-        200,
+        STATUS_CODE.SUCCESS,
         { song },
-        "Fetched Song and View counted successfully"
+        RESPONSE_MESSAGES.SONG_VIEW_COUNTED
       )
     );
 });

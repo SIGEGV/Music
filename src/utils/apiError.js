@@ -1,7 +1,9 @@
+import { MESSAGES } from "./utils.constants.js";
+
 class apiError extends Error {
   constructor(
     statusCode,
-    message = "Something Went Wrong",
+    message = MESSAGES.ERROR_MESSAGE,
     error = [],
     stack = ""
   ) {

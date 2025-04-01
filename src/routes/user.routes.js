@@ -10,8 +10,8 @@ import {
   updateAvatar,
   updateUserDetail,
   verifyUserOtpAndRegister,
+  loginUser,
 } from "../controllers/user.controller.js";
-import { loginUser } from "../controllers/user.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 const router = Router();
@@ -29,7 +29,6 @@ router.route("/verify-otp").post(verifyUserOtpAndRegister);
 
 router.route("/login").post(loginUser);
 
-//secureRoutes
 router.route("/logout").post(verifyJWT, loggedoutUser);
 router.route("/watchHistory").post(verifyJWT, getWatchHistory);
 router.route("/refresh-token").post(refreshAccessToken);
@@ -40,4 +39,5 @@ router
   .route("/update-avatar")
   .patch(verifyJWT, upload.single("avatar"), updateAvatar);
 router.route("/:userId/content").get(verifyJWT, getUserContent);
+
 export default router;
