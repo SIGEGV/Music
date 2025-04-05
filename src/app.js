@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import { STATIC_FOLDER, TRAFIC_LIMIT } from "./constants.js";
 
 const app = express();
 
@@ -11,9 +12,9 @@ app.use(
   })
 );
 
-app.use(express.json({ limit: "16kb" }));
-app.use(express.urlencoded({ extended: true, limit: "16kb" }));
-app.use(express.static("public"));
+app.use(express.json({ limit: TRAFIC_LIMIT }));
+app.use(express.urlencoded({ extended: true, limit: TRAFIC_LIMIT }));
+app.use(express.static(STATIC_FOLDER));
 app.use(cookieParser());
 
 // routes

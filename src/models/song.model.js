@@ -1,6 +1,6 @@
 import mongoose, { Schema } from "mongoose";
 import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2";
-import { SONG, USER } from "./models.constansts.js";
+import { LIKE, SONG, USER } from "./models.constansts.js";
 
 const LikesSchema = new Schema(
   {
@@ -54,13 +54,6 @@ const songSchema = new Schema(
       type: Number,
       default: 0,
     },
-    like: [
-      // cache it
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: USER,
-      },
-    ],
     owner: {
       type: mongoose.Schema.Types.ObjectId,
       ref: USER,
@@ -85,3 +78,4 @@ const songSchema = new Schema(
 
 songSchema.plugin(mongooseAggregatePaginate);
 export const Song = mongoose.model(SONG, songSchema);
+export const Like = mongoose.model(LIKE, LikesSchema);

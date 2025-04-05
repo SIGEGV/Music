@@ -1,6 +1,6 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { apiError } from "../utils/apiError.js";
-import { Song } from "../models/song.model.js";
+import { Song, Like } from "../models/song.model.js";
 import { uploadOnCloudinary } from "../utils/Cloudinary.service.js";
 import { User } from "../models/user.model.js";
 import * as mm from "music-metadata";
@@ -11,10 +11,18 @@ import {
   RESPONSE_MESSAGES,
   ONE_MONTH_AGO,
   THIRTY_MINUTES,
+  REDIS,
 } from "../controllers/controller.constants.js";
+import { redisClient } from "../utils/redis.js";
+import {
+  LIKE,
+  SONG_FIELDS,
+  USER,
+  USER_FIELDS,
+} from "../models/models.constansts.js";
 
 /**
- * Route to upload a song and its thumbnail.
+ * @description Route to upload a song and its thumbnail.
  * This route handles multipart file uploads for song files and thumbnail images.
  * Only authorized users (JWT verified) can access this route.
  *
@@ -94,7 +102,7 @@ const uploadAudio = asyncHandler(async (req, res) => {
 });
 
 /**
- * Route to search for songs based on query parameters.
+ * @description Route to search for songs based on query parameters.
  * This route retrieves a list of songs based on the search query.
  * Users must be authorized via JWT to access this route.
  *
@@ -117,7 +125,10 @@ const searchSong = asyncHandler(async (req, res) => {
   }
   const songs = await Song.find({
     title: { $regex: query, $options: "i" },
-  }).populate("owner", "username fullname  avatar");
+  }).populate(
+    `${SONG_FIELDS.OWNER}`,
+    `${USER_FIELDS.USERNAME} ${USER_FIELDS.FULLNAME} ${USER_FIELDS.AVATAR}`
+  );
   if (!songs.length) {
     throw new apiError(STATUS_CODE.NOT_FOUND, ERROR_MESSAGES.SONG_NOT_FOUND);
   }
@@ -133,7 +144,7 @@ const searchSong = asyncHandler(async (req, res) => {
 });
 
 /**
- * Route to update the details of a song.
+ * @description Route to update the details of a song.
  * This route allows the modification of song metadata such as title, artist, etc.
  * Only authorized users can update song details.
  *
@@ -181,7 +192,7 @@ const updateSongDetail = asyncHandler(async (req, res) => {
 });
 
 /**
- * Route to delete a song by its ID.
+ * @description Route to delete a song by its ID.
  * This route deletes the song permanently from the database.
  * Only authorized users can delete a song.
  *
@@ -212,7 +223,7 @@ const deleteSong = asyncHandler(async (req, res) => {
 });
 
 /**
- * Route to update the thumbnail of a song.
+ * @description Route to update the thumbnail of a song.
  * This route allows users to update the thumbnail image associated with a song.
  * Only authorized users can perform this operation.
  *
@@ -267,10 +278,9 @@ const updateThumbnail = asyncHandler(async (req, res) => {
 });
 
 /**
- * Route to like a song by its ID.
- * This route increments the like count of a song.
- * Users must be authorized via JWT to like a song.
- *
+ * @description Like a song by its ID. This endpoint checks if the user has already liked the song using Redis.
+ * If not, it adds the user's ID to a Redis set and updates the like count.
+ * The actual MongoDB update is handled later via a scheduled cron job.
  * @route POST /:songId/like
  * @group Song - Operations related to song management
  * @param {string} songId.path.required - The ID of the song to be liked.
@@ -279,39 +289,49 @@ const updateThumbnail = asyncHandler(async (req, res) => {
  * @returns {Object} 200 - Success message confirming the song was liked.
  * @returns {Object} 401 - Unauthorized access if JWT is invalid.
  * @returns {Object} 404 - Song not found if the given song ID does not exist.
+ * @returns {Object} 500 - Internal Server error
  * @example
  * POST /12345/like
  */
 const likeSong = asyncHandler(async (req, res) => {
-  const { songId } = req.params;
-  const userId = req.user._id;
-  const song = await Song.findById(songId).select("like likeCount");
-  if (!Array.isArray(song.like)) {
-    song.like = [];
-  }
-  if (song.like.includes(userId)) {
+  try {
+    const { songId } = req.params;
+    const userId = req.user._id.toString();
+    const songKey = `song:${songId}`;
+    const redisSetKey = `${songKey}:likedBy`;
+    const keyExist = await redisClient.exists(redisSetKey);
+    if (!keyExist) {
+      const likeDetail = await Like.findOne({ songId });
+      const userIds = likeDetail?.userId.map((id) => id.toString()) || [];
+      if (userIds.length) {
+        await redisClient.sAdd(redisSetKey, userIds);
+      }
+    }
+    const isAlreadyLiked = await redisClient.sIsMember(redisSetKey, userId);
+    if (isAlreadyLiked) {
+      return res
+        .status(STATUS_CODE.SUCCESS)
+        .json(
+          new apiResponse(
+            STATUS_CODE.SUCCESS,
+            {},
+            RESPONSE_MESSAGES.SONG_ALREADY_LIKED
+          )
+        );
+    }
+    await redisClient.sAdd(redisSetKey, userId);
     return res
       .status(STATUS_CODE.SUCCESS)
       .json(
-        new apiResponse(
-          STATUS_CODE.SUCCESS,
-          song,
-          RESPONSE_MESSAGES.SONG_ALREADY_LIKED
-        )
+        new apiResponse(STATUS_CODE.SUCCESS, {}, RESPONSE_MESSAGES.SONG_LIKED)
       );
+  } catch (error) {
+    throw new apiError(error.code, error.message);
   }
-  song.like.push(userId);
-  song.likeCount += 1;
-  await song.save({ validateBeforeSave: false });
-  return res
-    .status(STATUS_CODE.SUCCESS)
-    .json(
-      new apiResponse(STATUS_CODE.SUCCESS, song, RESPONSE_MESSAGES.SONG_LIKED)
-    );
 });
 
 /**
- * Route to unlike a song by its ID.
+ * @description Route to unlike a song by its ID.
  * This route decrements the like count of a song.
  * Users must be authorized via JWT to unlike a song.
  *
@@ -322,41 +342,37 @@ const likeSong = asyncHandler(async (req, res) => {
  * @param {Object} res - The response object confirming the song was unliked.
  * @returns {Object} 200 - Success message confirming the song was unliked.
  * @returns {Object} 401 - Unauthorized access if JWT is invalid.
- * @returns {Object} 404 - Song not found if the given song ID does not exist.
+ * @returns {Object} 500 - Internal Server Error
  * @example
  * POST /12345/unlike
  */
 const unlikeSong = asyncHandler(async (req, res) => {
-  const { songId } = req.params;
-  const userId = req.user._id;
-  const song = await Song.findById(songId).select("like likeCount");
-  if (!Array.isArray(song.like)) {
-    song.like = [];
-  }
-  if (!song.like.includes(userId)) {
+  try {
+    const { songId } = req.params;
+    const userId = req.user._id.toString();
+    const songKey = `song:${songId}`;
+    const redisSetKey = `${songKey}:likedBy`;
+    const keyExist = await redisClient.exists(redisSetKey);
+    if (!keyExist) {
+      const likeDetail = await Like.findOne({ songId });
+      const userIds = likeDetail?.userId.map((id) => id.toString()) || [];
+      if (userIds.length) {
+        await redisClient.sAdd(redisSetKey, userIds);
+      }
+    }
+    await redisClient.sRem(redisSetKey, userId);
     return res
       .status(STATUS_CODE.SUCCESS)
       .json(
-        new apiResponse(
-          STATUS_CODE.SUCCESS,
-          song,
-          RESPONSE_MESSAGES.SONG_ALREADY_UNLIKED
-        )
+        new apiResponse(STATUS_CODE.SUCCESS, {}, RESPONSE_MESSAGES.SONG_UNLIKED)
       );
+  } catch (error) {
+    throw new apiError(STATUS_CODE.INTERNAL_SERVER_ERROR, err.message);
   }
-  song.like = song.like.filter((id) => id.toString() !== userId.toString());
-  song.likeCount -= 1;
-  await song.save({ validateBeforeSave: false });
-
-  return res
-    .status(STATUS_CODE.SUCCESS)
-    .json(
-      new apiResponse(STATUS_CODE.SUCCESS, song, RESPONSE_MESSAGES.SONG_UNLIKED)
-    );
 });
 
 /**
- * Route to get a song and update its view count.
+ * @description Route to get a song and update its view count.
  * This route retrieves a song's details and updates the view count.
  * Only authorized users can access this route.
  *

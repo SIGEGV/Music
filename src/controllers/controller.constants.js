@@ -74,6 +74,8 @@ const ERROR_MESSAGES = {
   INVALID_UPDATE_FIELDS: "Enter at least one field to update.",
   SONG_UPDATE_FAILED: "Failed to update song details.",
   SONG_DELETE_FAILED: "Song does not exist or could not be deleted.",
+  SONG_LIKED_FAILED: "Failed to Like the Song. Please try again",
+  SONG_UNLIKED_FAILED: "Failed to Unlike the Song. Please try again",
 
   // General Errors
   UPLOAD_THUMBNAIL_REQUIRED: "Upload the thumbnail file.",
@@ -85,6 +87,9 @@ const ONE_MONTH_AGO = new Date();
 const THIRTY_MINUTES = 30 * 60 * 1000;
 const EMAIL_FOR_OTP = "emailForOTP";
 
+const REDIS = {
+  LIKE_COUNT: "likeCount",
+};
 export {
   STATUS_CODE,
   RESPONSE_MESSAGES,
@@ -92,4 +97,5 @@ export {
   ONE_MONTH_AGO,
   THIRTY_MINUTES,
   EMAIL_FOR_OTP,
+  REDIS,
 };
