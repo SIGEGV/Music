@@ -27,4 +27,5 @@ const SONG_FIELDS = {
 
 const SONG = "Song";
 const USER = "User";
-export { USER_FIELDS, SONG_FIELDS, SONG, USER };
+const LIKE = "Like";
+export { USER_FIELDS, SONG_FIELDS, SONG, USER, LIKE };
