@@ -1,6 +1,6 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { apiError } from "../utils/apiError.js";
-import { User } from "../models/user.model.js";
+import { USER } from "../models/user.model.js";
 import jwt from "jsonwebtoken";
 import { ERROR_MESSAGES, STATUS_CODES } from "./middleware.constants.js";
 import { USER_FIELDS } from "../models/models.constansts.js";
@@ -20,7 +20,7 @@ export const verifyJWT = asyncHandler(async (req, _, next) => {
       );
     }
     const decodedUser = jwt.verify(Token, process.env.ACCESS_TOKEN_SECRET);
-    const user = await User.findById(decodedUser._id).select(
+    const user = await USER.findById(decodedUser._id).select(
       `-${USER_FIELDS.REFRESH_TOKEN}`
     );
     if (!user) {

@@ -1,8 +1,8 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { apiError } from "../utils/apiError.js";
-import { Song, Like } from "../models/song.model.js";
+import { SONG, LIKE } from "../models/song.model.js";
 import { uploadOnCloudinary } from "../utils/Cloudinary.service.js";
-import { User } from "../models/user.model.js";
+import { USER } from "../models/user.model.js";
 import * as mm from "music-metadata";
 import { apiResponse } from "../utils/apiResponse.js";
 import {
@@ -11,15 +11,11 @@ import {
   RESPONSE_MESSAGES,
   ONE_MONTH_AGO,
   THIRTY_MINUTES,
-  REDIS,
+  FILE_TYPE_CLOUDINARY,
 } from "../controllers/controller.constants.js";
 import { redisClient } from "../utils/redis.js";
-import {
-  LIKE,
-  SONG_FIELDS,
-  USER,
-  USER_FIELDS,
-} from "../models/models.constansts.js";
+
+import { SONG_FIELDS, USER_FIELDS } from "../models/models.constansts.js";
 
 /**
  * @description Route to upload a song and its thumbnail.
@@ -51,7 +47,10 @@ const uploadAudio = asyncHandler(async (req, res) => {
   const audioMetaData = await mm.parseFile(audioFileLocalPath);
   const duration = Math.round(audioMetaData?.format.duration);
 
-  const audioPath = await uploadOnCloudinary(audioFileLocalPath, "audio");
+  const audioPath = await uploadOnCloudinary(
+    audioFileLocalPath,
+    FILE_TYPE_CLOUDINARY.AUDIO
+  );
   if (!audioPath) {
     throw new apiError(
       STATUS_CODE.INTERNAL_SERVER_ERROR,
@@ -75,7 +74,7 @@ const uploadAudio = asyncHandler(async (req, res) => {
   }
 
   const userId = req.user._id;
-  const song = await Song.create({
+  const song = await SONG.create({
     songFile: audioPath.url,
     thumbnail: thumbnailPath.url,
     title: title,
@@ -83,7 +82,7 @@ const uploadAudio = asyncHandler(async (req, res) => {
     duration: duration,
     owner: userId,
   });
-  const songUploaded = await Song.findById(song._id);
+  const songUploaded = await SONG.findById(song._id);
   if (!songUploaded) {
     throw new apiError(
       STATUS_CODE.INTERNAL_SERVER_ERROR,
@@ -123,7 +122,7 @@ const searchSong = asyncHandler(async (req, res) => {
       ERROR_MESSAGES.INVALID_SEARCH_QUERY
     );
   }
-  const songs = await Song.find({
+  const songs = await SONG.find({
     title: { $regex: query, $options: "i" },
   }).populate(
     `${SONG_FIELDS.OWNER}`,
@@ -169,7 +168,7 @@ const updateSongDetail = asyncHandler(async (req, res) => {
     );
   }
 
-  const updatedSong = await Song.findByIdAndUpdate(
+  const updatedSong = await SONG.findByIdAndUpdate(
     songId,
     { $set: req.body },
     { new: true }
@@ -209,7 +208,7 @@ const updateSongDetail = asyncHandler(async (req, res) => {
  */
 const deleteSong = asyncHandler(async (req, res) => {
   const { songId } = req.params;
-  const deletedSong = await Song.findByIdAndDelete(songId);
+  const deletedSong = await SONG.findByIdAndDelete(songId);
 
   if (!deletedSong) {
     throw new apiError(STATUS_CODE.NOT_FOUND, ERROR_MESSAGES.SONG_NOT_FOUND);
@@ -254,7 +253,7 @@ const updateThumbnail = asyncHandler(async (req, res) => {
       ERROR_MESSAGES.FAILED_THUMBNAIL_UPLOAD
     );
   }
-  const updatedSong = await Song.findByIdAndUpdate(
+  const updatedSong = await SONG.findByIdAndUpdate(
     songId,
     { $set: { thumbnail: thumbnailPath.url } },
     { new: true }
@@ -301,7 +300,7 @@ const likeSong = asyncHandler(async (req, res) => {
     const redisSetKey = `${songKey}:likedBy`;
     const keyExist = await redisClient.exists(redisSetKey);
     if (!keyExist) {
-      const likeDetail = await Like.findOne({ songId });
+      const likeDetail = await LIKE.findOne({ songId });
       const userIds = likeDetail?.userId.map((id) => id.toString()) || [];
       if (userIds.length) {
         await redisClient.sAdd(redisSetKey, userIds);
@@ -354,7 +353,7 @@ const unlikeSong = asyncHandler(async (req, res) => {
     const redisSetKey = `${songKey}:likedBy`;
     const keyExist = await redisClient.exists(redisSetKey);
     if (!keyExist) {
-      const likeDetail = await Like.findOne({ songId });
+      const likeDetail = await LIKE.findOne({ songId });
       const userIds = likeDetail?.userId.map((id) => id.toString()) || [];
       if (userIds.length) {
         await redisClient.sAdd(redisSetKey, userIds);
@@ -390,8 +389,8 @@ const unlikeSong = asyncHandler(async (req, res) => {
 const getSongAndUpdateViews = asyncHandler(async (req, res) => {
   const { songId } = req.params;
   const userId = req.user._id;
-  const song = await Song.findById(songId);
-  const user = await User.findById(userId);
+  const song = await SONG.findById(songId);
+  const user = await USER.findById(userId);
 
   if (!Array.isArray(user.watchHistory)) {
     user.watchHistory = [];

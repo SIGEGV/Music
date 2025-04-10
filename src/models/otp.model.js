@@ -1,6 +1,7 @@
 import mongoose, { Schema } from "mongoose";
+import { SCHEMA_NAMES } from "./models.constansts.js";
 
-const otpSchema = new Schema(
+const OTP_SCHEMA = new Schema(
   {
     email: {
       type: String,
@@ -19,4 +20,4 @@ const otpSchema = new Schema(
   { timestamps: true }
 );
 
-export const Otp = mongoose.model("Otp", otpSchema);
+export const OTP = mongoose.model(SCHEMA_NAMES.OTP, OTP_SCHEMA);

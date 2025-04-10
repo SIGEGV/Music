@@ -1,9 +1,9 @@
 import mongoose, { Schema } from "mongoose";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
-import { SONG, USER, USER_FIELDS } from "./models.constansts.js";
+import { SCHEMA_NAMES, USER_FIELDS } from "./models.constansts.js";
 
-const userSchema = new Schema(
+const USER_SCEHEMA = new Schema(
   {
     username: {
       type: String,
@@ -34,7 +34,7 @@ const userSchema = new Schema(
       {
         song: {
           type: Schema.Types.ObjectId,
-          ref: SONG,
+          ref: SCHEMA_NAMES.SONG,
         },
         watchedAt: {
           type: Date,
@@ -53,17 +53,17 @@ const userSchema = new Schema(
   { timestamps: true }
 );
 
-userSchema.pre("save", async function (next) {
+USER_SCEHEMA.pre("save", async function (next) {
   if (!this.isModified(USER_FIELDS.PASSWORD)) return next();
   this.password = await bcrypt.hash(this.password, 10);
   next();
 });
 
-userSchema.methods.isPasswordCorrect = async function (password) {
+USER_SCEHEMA.methods.isPasswordCorrect = async function (password) {
   return await bcrypt.compare(password, this.password);
 };
 
-userSchema.methods.generateAccessToken = async function () {
+USER_SCEHEMA.methods.generateAccessToken = async function () {
   return jwt.sign(
     {
       _id: this._id,
@@ -77,7 +77,7 @@ userSchema.methods.generateAccessToken = async function () {
     }
   );
 };
-userSchema.methods.generateRefreshToken = async function () {
+USER_SCEHEMA.methods.generateRefreshToken = async function () {
   return jwt.sign(
     {
       _id: this._id,
@@ -89,4 +89,4 @@ userSchema.methods.generateRefreshToken = async function () {
   );
 };
 
-export const User = mongoose.model(USER, userSchema);
+export const USER = mongoose.model(SCHEMA_NAMES.USER, USER_SCEHEMA);

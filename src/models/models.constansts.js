@@ -24,8 +24,12 @@ const SONG_FIELDS = {
   VIEWED_BY_USER_ID: "viewedBy.userId",
   VIEWED_BY_LAST_VIEWED: "viewedBy.lastViewed",
 };
+const SCHEMA_NAMES = {
+  COMMENTS: "Comments",
+  SONG: "Song",
+  USER: "User",
+  LIKE: "Like",
+  OTP: "Otp",
+};
 
-const SONG = "Song";
-const USER = "User";
-const LIKE = "Like";
-export { USER_FIELDS, SONG_FIELDS, SONG, USER, LIKE };
+export { USER_FIELDS, SONG_FIELDS, SCHEMA_NAMES };

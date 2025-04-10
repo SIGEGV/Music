@@ -1,6 +1,6 @@
 import cron from "node-cron";
 import mongoose from "mongoose";
-import { Song, Like } from "../models/song.model.js";
+import { SONG, LIKE } from "../models/song.model.js";
 import { redisClient } from "../utils/redis.js";
 cron.schedule("1 * * * *", async () => {
   try {
@@ -16,13 +16,13 @@ cron.schedule("1 * * * *", async () => {
         (id) => new mongoose.Types.ObjectId(id)
       );
 
-      await Like.findOneAndUpdate(
+      await LIKE.findOneAndUpdate(
         { songId },
         { userId: userObjectIds },
         { upsert: true, new: true }
       );
 
-      await Song.findByIdAndUpdate(songId, {
+      await SONG.findByIdAndUpdate(songId, {
         likeCount: userObjectIds.length,
       });
 

@@ -1,11 +1,11 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { apiError } from "../utils/apiError.js";
-import { User } from "../models/user.model.js";
+import { USER } from "../models/user.model.js";
 import { uploadOnCloudinary } from "../utils/Cloudinary.service.js";
 import { apiResponse } from "../utils/apiResponse.js";
 import jwt from "jsonwebtoken";
-import { Song } from "../models/song.model.js";
-import { Otp } from "../models/otp.model.js";
+import { SONG } from "../models/song.model.js";
+import { OTP } from "../models/otp.model.js";
 import otpGenerator from "otp-generator";
 import bcrypt from "bcrypt";
 import tempUserStorage from "../utils/tempUserStorage.js";
@@ -30,7 +30,7 @@ import { SONG_FIELDS, USER_FIELDS } from "../models/models.constansts.js";
  */
 const generateAccessAndRefreshToken = async (userId) => {
   try {
-    const user = await User.findById(userId);
+    const user = await USER.findById(userId);
     const accessToken = await user.generateAccessToken();
     const refreshToken = await user.generateRefreshToken();
 
@@ -71,7 +71,7 @@ const registerUser = asyncHandler(async (req, res) => {
   ) {
     throw new apiError(STATUS_CODE.BAD_REQUEST, ERROR_MESSAGES.MISSING_FIELDS);
   }
-  const userExist = await User.findOne({
+  const userExist = await USER.findOne({
     $or: [{ username }, { email }],
   });
 
@@ -97,8 +97,8 @@ const registerUser = asyncHandler(async (req, res) => {
     specialChars: false,
   });
   const hashedOtp = await bcrypt.hash(generateOtp, 10);
-  await Otp.deleteMany({ email });
-  const otpCreated = await Otp.create({ email: email, otp: hashedOtp });
+  await OTP.deleteMany({ email });
+  const otpCreated = await OTP.create({ email: email, otp: hashedOtp });
   if (!otpCreated) {
     throw new apiError(STATUS_CODE.INTERNAL_SERVER_ERROR, OTP_FAILED_TO_STORE);
   }
@@ -140,7 +140,7 @@ const verifyUserOtpAndRegister = asyncHandler(async (req, res) => {
   if ([otp].some((fields) => fields?.trim() === "")) {
     throw new apiError(STATUS_CODE.BAD_REQUEST, ERROR_MESSAGES.MISSING_OTP);
   }
-  const otpRecord = await Otp.findOne({ email });
+  const otpRecord = await OTP.findOne({ email });
   if (!otpRecord) {
     throw new apiError(STATUS_CODE.BAD_REQUEST, ERROR_MESSAGES.OTP_EXPIRED);
   }
@@ -148,14 +148,14 @@ const verifyUserOtpAndRegister = asyncHandler(async (req, res) => {
   if (!isMatch) {
     throw new apiError(STATUS_CODE.BAD_REQUEST, ERROR_MESSAGES.INVALID_OTP);
   }
-  await Otp.deleteOne({ email });
+  await OTP.deleteOne({ email });
   const userDetails = tempUserStorage[email];
   if (!userDetails) {
     throw new apiError(STATUS_CODE.BAD_REQUEST, ERROR_MESSAGES.SESSION_EXPIRED);
   }
   const { fullname, username, password, avatarPath } = userDetails;
 
-  const user = await User.create({
+  const user = await USER.create({
     fullname,
     email,
     username,
@@ -163,7 +163,7 @@ const verifyUserOtpAndRegister = asyncHandler(async (req, res) => {
     avatar: avatarPath.url,
   });
   delete tempUserStorage[email];
-  const userCreated = await User.findById(user._id).select(
+  const userCreated = await USER.findById(user._id).select(
     `-${USER_FIELDS.PASSWORD} -${USER_FIELDS.REFRESH_TOKEN}`
   );
   if (!userCreated) {
@@ -200,7 +200,7 @@ const loginUser = asyncHandler(async (req, res) => {
   if (!(username || email || password)) {
     throw new apiError(STATUS_CODE.BAD_REQUEST, ERROR_MESSAGES.MISSING_FIELDS);
   }
-  const user = await User.findOne({
+  const user = await USER.findOne({
     $or: [{ username }, { email }],
   });
 
@@ -209,7 +209,7 @@ const loginUser = asyncHandler(async (req, res) => {
   }
 
   if (username && email) {
-    const emailUser = await User.findOne({ email });
+    const emailUser = await USER.findOne({ email });
     if (!emailUser || emailUser.username !== username) {
       throw new apiError(
         STATUS_CODE.BAD_REQUEST,
@@ -228,7 +228,7 @@ const loginUser = asyncHandler(async (req, res) => {
   const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
     user._id
   );
-  const loggedInUser = await User.findById(user._id).select(
+  const loggedInUser = await USER.findById(user._id).select(
     `-${USER_FIELDS.PASSWORD} -${USER_FIELDS.REFRESH_TOKEN}`
   );
   const options = {
@@ -263,7 +263,7 @@ const loginUser = asyncHandler(async (req, res) => {
  */
 const loggedoutUser = asyncHandler(async (req, res) => {
   const user = req.user._id;
-  await User.findByIdAndUpdate(
+  await USER.findByIdAndUpdate(
     // Removing Refresh token form db
     user,
     {
@@ -317,7 +317,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
       process.env.REFRESH_TOKEN_SECRET
     );
 
-    const user = await User.findById(decodedToken?._id);
+    const user = await USER.findById(decodedToken?._id);
     if (!user) {
       throw new apiError(
         STATUS_CODE.UNAUTHORIZED,
@@ -416,7 +416,7 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
  * @description Fetches the details of the currently authenticated user, excluding sensitive fields like password and refresh token.
  */
 const getCurrentUser = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.user?._id).select(
+  const user = await USER.findById(req.user?._id).select(
     `-${USER_FIELDS.PASSWORD} -${USER_FIELDS.REFRESH_TOKEN}`
   );
   return res
@@ -450,7 +450,7 @@ const updateUserDetail = asyncHandler(async (req, res) => {
         ERROR_MESSAGES.MISSING_FIELDS
       );
     }
-    const user = await User.findByIdAndUpdate(
+    const user = await USER.findByIdAndUpdate(
       req.user?._id,
       {
         $set: {
@@ -499,7 +499,7 @@ const updateAvatar = asyncHandler(async (req, res) => {
       ERROR_MESSAGES.FAILED_AVATAR_UPLOAD
     );
   }
-  const user = await User.findByIdAndUpdate(
+  const user = await USER.findByIdAndUpdate(
     req.user?._id,
     {
       $set: { avatar: avatar.url },
@@ -538,14 +538,14 @@ const getUserContent = asyncHandler(async (req, res) => {
       );
     }
 
-    const user = await User.findById(userId).select(
+    const user = await USER.findById(userId).select(
       `${USER_FIELDS.USERNAME} ${USER_FIELDS.FULLNAME} ${USER_FIELDS.AVATAR}`
     );
     if (!user) {
       throw new apiError(STATUS_CODE.NOT_FOUND, ERROR_MESSAGES.USER_NOT_FOUND);
     }
 
-    const songs = await Song.find({ owner: userId });
+    const songs = await SONG.find({ owner: userId });
 
     return res
       .status(STATUS_CODE.SUCCESS)
@@ -574,7 +574,7 @@ const getUserContent = asyncHandler(async (req, res) => {
  */
 const getWatchHistory = asyncHandler(async (req, res) => {
   const userId = req.user._id;
-  const user = await User.findById(userId)
+  const user = await USER.findById(userId)
     .populate({
       path: USER_FIELDS.WATCH_HISTORY_SONG,
       select: `${SONG_FIELDS.TITLE} ${SONG_FIELDS.THUMBNAIL} ${SONG_FIELDS.DURATION} ${SONG_FIELDS.OWNER}`,

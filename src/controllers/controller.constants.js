@@ -90,6 +90,10 @@ const EMAIL_FOR_OTP = "emailForOTP";
 const REDIS = {
   LIKE_COUNT: "likeCount",
 };
+
+const FILE_TYPE_CLOUDINARY = {
+  AUDIO: "audio",
+};
 export {
   STATUS_CODE,
   RESPONSE_MESSAGES,
@@ -98,4 +102,5 @@ export {
   THIRTY_MINUTES,
   EMAIL_FOR_OTP,
   REDIS,
+  FILE_TYPE_CLOUDINARY,
 };

@@ -1,18 +1,18 @@
 import mongoose, { Schema } from "mongoose";
 import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2";
-import { LIKE, SONG, USER } from "./models.constansts.js";
+import { SCHEMA_NAMES } from "./models.constansts.js";
 
-const LikesSchema = new Schema(
+const LIKES_SCHEMA = new Schema(
   {
     songId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: SONG,
+      ref: SCHEMA_NAMES.SONG,
       required: true,
     },
     userId: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: USER,
+        ref: SCHEMA_NAMES.USER,
         required: true,
       },
     ],
@@ -20,7 +20,7 @@ const LikesSchema = new Schema(
   { timestamps: true }
 );
 
-const songSchema = new Schema(
+const SONG_SCHEMA = new Schema(
   {
     songFile: {
       type: String,
@@ -56,7 +56,7 @@ const songSchema = new Schema(
     },
     owner: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: USER,
+      ref: SCHEMA_NAMES.USER,
       required: true,
       default: [],
     },
@@ -64,7 +64,7 @@ const songSchema = new Schema(
       {
         userId: {
           type: mongoose.Schema.Types.ObjectId,
-          ref: USER,
+          ref: SCHEMA_NAMES.USER,
         },
         lastViewed: {
           type: Date,
@@ -76,6 +76,6 @@ const songSchema = new Schema(
   { timestamps: true }
 );
 
-songSchema.plugin(mongooseAggregatePaginate);
-export const Song = mongoose.model(SONG, songSchema);
-export const Like = mongoose.model(LIKE, LikesSchema);
+SONG_SCHEMA.plugin(mongooseAggregatePaginate);
+export const SONG = mongoose.model(SCHEMA_NAMES.SONG, SONG_SCHEMA);
+export const LIKE = mongoose.model(SCHEMA_NAMES.LIKE, LIKES_SCHEMA);
