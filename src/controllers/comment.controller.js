@@ -233,6 +233,17 @@ const unlikeComment = asyncHandler(async (req, res) => {
   }
 });
 
+/**
+ * @description Allows a user to delete a comment and all nested replies associated with it.
+ * @async
+ * @function deleteComment
+ * @param {Object} req - The request object.
+ * @param {Object} req.params - The request parameters.
+ * @param {string} req.params.commentId - The ID of the comment to be deleted.
+ * @param {Object} res - The response object.
+ * @returns {Object} A response object indicating that the comment and its replies have been successfully deleted.
+ * @throws {apiError} If there is an issue with the deletion operation.
+ */
 const deleteComment = asyncHandler(async (req, res) => {
   const { commentId } = req.params;
   const allCommentIdsToDelete = [];
