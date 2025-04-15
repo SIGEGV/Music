@@ -1,7 +1,21 @@
+/**
+ * @module models/song.model
+ * @description Defines schemas related to songs and their likes.
+ */
+
 import mongoose, { Schema } from "mongoose";
 import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2";
 import { SCHEMA_NAMES } from "./models.constansts.js";
 
+/**
+ * @constant LIKES_SCHEMA
+ * @type {Schema}
+ * @description Maps a song to an array of users who liked it.
+ *
+ * Fields:
+ * - `songId`: Reference to the liked song.
+ * - `userId`: List of users who liked the song.
+ */
 const LIKES_SCHEMA = new Schema(
   {
     songId: {
@@ -19,6 +33,19 @@ const LIKES_SCHEMA = new Schema(
   },
   { timestamps: true }
 );
+
+/**
+ * @constant SONG_SCHEMA
+ * @type {Schema}
+ * @description Represents a song with associated metadata and view/like tracking.
+ *
+ * Fields:
+ * - `songFile`, `thumbnail`: File paths.
+ * - `title`, `description`, `duration`: Basic song metadata.
+ * - `views`, `commentCount`, `likeCount`: Aggregated metrics.
+ * - `owner`: User who uploaded the song.
+ * - `viewedBy`: Array of objects containing user and timestamp of view.
+ */
 
 const SONG_SCHEMA = new Schema(
   {

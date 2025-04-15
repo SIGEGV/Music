@@ -26,6 +26,7 @@ const SONG_FIELDS = {
 };
 const SCHEMA_NAMES = {
   COMMENTS: "Comments",
+  COMMENTS_LIKE: "Comments_Like",
   SONG: "Song",
   USER: "User",
   LIKE: "Like",

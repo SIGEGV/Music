@@ -1,8 +1,16 @@
+/**
+ * @module models/user.model
+ * @description Schema for user data and authentication logic.
+ */
 import mongoose, { Schema } from "mongoose";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import { SCHEMA_NAMES, USER_FIELDS } from "./models.constansts.js";
-
+/**
+ * @constant USER_SCHEMA
+ * @type {Schema}
+ * @description Stores user data including credentials, profile, and watch history.
+ */
 const USER_SCEHEMA = new Schema(
   {
     username: {
@@ -53,15 +61,28 @@ const USER_SCEHEMA = new Schema(
   { timestamps: true }
 );
 
+/**
+ * Middleware to hash password before saving user document.
+ */
 USER_SCEHEMA.pre("save", async function (next) {
   if (!this.isModified(USER_FIELDS.PASSWORD)) return next();
   this.password = await bcrypt.hash(this.password, 10);
   next();
 });
 
+/**
+ * Instance method to compare a plain password with the hashed password.
+ * @param {string} password - Plain password to verify.
+ * @returns {Promise<boolean>}
+ */
 USER_SCEHEMA.methods.isPasswordCorrect = async function (password) {
   return await bcrypt.compare(password, this.password);
 };
+
+/**
+ * Instance method to generate an access token for the user.
+ * @returns {Promise<string>}
+ */
 
 USER_SCEHEMA.methods.generateAccessToken = async function () {
   return jwt.sign(
@@ -77,6 +98,12 @@ USER_SCEHEMA.methods.generateAccessToken = async function () {
     }
   );
 };
+
+/**
+ * Instance method to generate a refresh token for the user.
+ * @returns {Promise<string>}
+ */
+
 USER_SCEHEMA.methods.generateRefreshToken = async function () {
   return jwt.sign(
     {

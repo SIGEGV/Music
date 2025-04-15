@@ -5,9 +5,24 @@ import jwt from "jsonwebtoken";
 import { ERROR_MESSAGES, STATUS_CODES } from "./middleware.constants.js";
 import { USER_FIELDS } from "../models/models.constansts.js";
 
-// to decode token stored in either cookies or header and then send the user details to the controller or next middleware
+/**
+ * @description Middleware function to verify the JSON Web Token (JWT) from the request cookies or headers.
+ * It decodes the JWT, checks the validity of the token, retrieves the associated user from the database,
+ * and attaches the user data to the `req.user` object. If the token is invalid or the user does not exist,
+ * it sends an unauthorized error response.
+ *
+ * This middleware is typically used to protect routes that require authentication.
+ *
+ * @async
+ * @function verifyJWT
+ * @param {Object} req - The request object, containing the access token in the cookies or Authorization header.
+ * @param {Object} _ - The response object (not used in this function).
+ * @param {Function} next - The next middleware function to call once authentication is complete.
+ * @returns {void} Calls the `next()` middleware if the token is valid and the user is found.
+ * @throws {apiError} Throws an error with a `401 Unauthorized` status if the token is invalid or user does not exist.
+ */
+
 export const verifyJWT = asyncHandler(async (req, _, next) => {
-  // used _ in replace of res as it is not used in this function
   try {
     const Token =
       req.cookies?.accessToken ||
