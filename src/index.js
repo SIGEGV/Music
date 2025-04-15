@@ -6,12 +6,12 @@
 import dotenv from "dotenv";
 import connectDB from "./db/db.js";
 import { app } from "./app.js";
-import { DEFAULT_PORT } from "./constants.js";
+import { DEFAULT_PORT, PATH } from "./constants.js";
 import { connectRedis } from "./utils/redis.js";
 
 // Load environment variables
 dotenv.config({
-  path: "./env",
+  path: PATH,
 });
 
 // Initialize Redis connection
