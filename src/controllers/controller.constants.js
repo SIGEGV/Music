@@ -31,7 +31,13 @@ const RESPONSE_MESSAGES = {
   SONG_ALREADY_LIKED: "Song has already been liked.",
   SONG_ALREADY_UNLIKED: "Song is already unliked.",
   THUMBNAIL_UPDATED: "Thumbnail updated successfully.",
-
+  // Comments
+  COMMENT_UPLOADED: "Comment Updated Successfully",
+  COMMENT_ALREADY_LIKED: "Comment has Already been liked ",
+  COMMENT_ALREADY_UNLIKED: "Comment has Already been unliked ",
+  COMMENT_LIKED: "Comment liked successfully.",
+  COMMENT_UNLIKED: "Comment unliked successfully.",
+  COMMENTS_DELETED_SUCCESSFULLY: "Comment and its replies deleted successfully",
   // Views & Analytics
   SONG_VIEW_NOT_COUNTED: "Fetched song, but view was recently counted.",
   SONG_VIEW_COUNTED: "Fetched song and view was counted.",
@@ -76,7 +82,15 @@ const ERROR_MESSAGES = {
   SONG_DELETE_FAILED: "Song does not exist or could not be deleted.",
   SONG_LIKED_FAILED: "Failed to Like the Song. Please try again",
   SONG_UNLIKED_FAILED: "Failed to Unlike the Song. Please try again",
-
+  //Comments
+  INVALID_CONTENT: "Content is required",
+  INVALID_PARENT_ID: "Enter a valid Parrent Comment Id",
+  FAILED_TO_COMMENT: "Failed to Comment the Song. Please try again",
+  PARENT_COMMENT_NOT_FOUND: "Parent comment not found",
+  COMMENT_LIKED_FAILED: "Failed to like the Comment. Please try again",
+  COMMENT_UNLIKE_FAILED: "Failed to Unlike the Comment. Please try again",
+  COMMENTS_DELETION_FAILED: "Failed to Delete the Comment. Please try again",
+  COMMENT_NOT_FOUND: "Comment not found",
   // General Errors
   UPLOAD_THUMBNAIL_REQUIRED: "Upload the thumbnail file.",
   PERMISSION_DENIED: "You do not have permission to perform this action.",

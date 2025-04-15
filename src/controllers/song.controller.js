@@ -298,6 +298,13 @@ const likeSong = asyncHandler(async (req, res) => {
     const userId = req.user._id.toString();
     const songKey = `song:${songId}`;
     const redisSetKey = `${songKey}:likedBy`;
+    const songIdExist = await COMMENTS.findById(songId);
+    if (!songIdExist) {
+      throw new apiError(
+        STATUS_CODE.NOT_FOUND,
+        ERROR_MESSAGES.COMMENT_NOT_FOUND
+      );
+    }
     const keyExist = await redisClient.exists(redisSetKey);
     if (!keyExist) {
       const likeDetail = await LIKE.findOne({ songId });
@@ -306,8 +313,8 @@ const likeSong = asyncHandler(async (req, res) => {
         await redisClient.sAdd(redisSetKey, userIds);
       }
     }
-    const isAlreadyLiked = await redisClient.sIsMember(redisSetKey, userId);
-    if (isAlreadyLiked) {
+    const songLiked = await redisClient.sAdd(redisSetKey, userId);
+    if (!songLiked) {
       return res
         .status(STATUS_CODE.SUCCESS)
         .json(
@@ -318,7 +325,6 @@ const likeSong = asyncHandler(async (req, res) => {
           )
         );
     }
-    await redisClient.sAdd(redisSetKey, userId);
     return res
       .status(STATUS_CODE.SUCCESS)
       .json(
@@ -351,6 +357,12 @@ const unlikeSong = asyncHandler(async (req, res) => {
     const userId = req.user._id.toString();
     const songKey = `song:${songId}`;
     const redisSetKey = `${songKey}:likedBy`;
+    if (!songIdExist) {
+      throw new apiError(
+        STATUS_CODE.NOT_FOUND,
+        ERROR_MESSAGES.COMMENT_NOT_FOUND
+      );
+    }
     const keyExist = await redisClient.exists(redisSetKey);
     if (!keyExist) {
       const likeDetail = await LIKE.findOne({ songId });
@@ -359,14 +371,25 @@ const unlikeSong = asyncHandler(async (req, res) => {
         await redisClient.sAdd(redisSetKey, userIds);
       }
     }
-    await redisClient.sRem(redisSetKey, userId);
+    const songUnliked = await redisClient.sRem(redisSetKey, userId);
+    if (!songUnliked) {
+      return res
+        .status(STATUS_CODE.SUCCESS)
+        .json(
+          new apiResponse(
+            STATUS_CODE.SUCCESS,
+            {},
+            RESPONSE_MESSAGES.SONG_ALREADY_UNLIKED
+          )
+        );
+    }
     return res
       .status(STATUS_CODE.SUCCESS)
       .json(
         new apiResponse(STATUS_CODE.SUCCESS, {}, RESPONSE_MESSAGES.SONG_UNLIKED)
       );
   } catch (error) {
-    throw new apiError(STATUS_CODE.INTERNAL_SERVER_ERROR, err.message);
+    throw new apiError(STATUS_CODE.INTERNAL_SERVER_ERROR, error.message);
   }
 });
 

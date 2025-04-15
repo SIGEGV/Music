@@ -1,15 +1,23 @@
+/**
+ * @file index.js
+ * @description Entry point of the backend server. Initializes environment config, DB & Redis connections, and starts the server.
+ */
+
 import dotenv from "dotenv";
 import connectDB from "./db/db.js";
 import { app } from "./app.js";
 import { DEFAULT_PORT } from "./constants.js";
 import { connectRedis } from "./utils/redis.js";
-import "../src/jobs/syncLikesToDB.js";
+
+// Load environment variables
 dotenv.config({
   path: "./env",
 });
 
+// Initialize Redis connection
 await connectRedis();
 
+// Start server after successful DB connection
 connectDB()
   .then(() => {
     app.listen(process.env.PORT || DEFAULT_PORT, () => {
@@ -17,5 +25,9 @@ connectDB()
     });
   })
   .catch((err) => {
-    console.log("Connection Failed", err);
+    console.error("Connection Failed", err);
   });
+
+// Background Jobs
+import "../src/jobs/syncLikesToDB.js";
+import "../src/jobs/syncCommentsLikesToDB.js";

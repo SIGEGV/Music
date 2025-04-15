@@ -1,3 +1,8 @@
+/**
+ * @module utils/sendOtp
+ * @description Utility to send OTP emails using nodemailer.
+ */
+
 import nodemailer from "nodemailer";
 import { apiError } from "./apiError.js";
 import { GMAIL, MESSAGES, STATUS_CODES } from "./utils.constants.js";
@@ -9,6 +14,16 @@ const transporter = nodemailer.createTransport({
     pass: process.env.SMTP_PASSWORD,
   },
 });
+
+/**
+ * @function sendOtp
+ * @async
+ * @description Sends an OTP email for verification.
+ * @param {string} email - Recipient email address.
+ * @param {string} otp - One-time password to be sent.
+ * @throws {apiError} On failure to send email.
+ * @returns {Promise<boolean>} Indicates if the email was sent successfully.
+ */
 
 const sendOtp = async (email, otp) => {
   try {
