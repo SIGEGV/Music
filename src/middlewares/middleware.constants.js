@@ -9,7 +9,10 @@ const ERROR_MESSAGES = {
   // Authentication Errors
   UNAUTHORIZED_REQUEST: "UNAUTHORIZED_REQUEST",
   INVALID_ACCESS_TOKEN: "INVALID_ACCESS_TOKEN",
-
+  COMMENT_NOT_FOUND: "Comment Not Found",
+  SONG_NOT_FOUND: "Song not found",
+  FORBIDDEN_ACCESS: "You do not have permission to perform this action.",
+  SONG_ID_REQUIRED: "Song id is Required",
   // Multer (File Upload) Errors
   INVALID_FILE_TYPE: "INVALID_FILE_TYPE",
   UNSUPPORTED_FILE_TYPE:
@@ -22,6 +25,7 @@ const STATUS_CODES = {
   FORBIDDEN: 403,
   NOT_FOUND: 404,
   INTERNAL_SERVER_ERROR: 500,
+  BAD_REQUEST: 400,
 };
 
 const FILE_CONSTANTS = {
