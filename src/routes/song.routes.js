@@ -11,6 +11,7 @@ import {
   updateThumbnail,
   uploadAudio,
 } from "../controllers/song.controller.js";
+import { isSongOwner } from "../middlewares/isSongOwner.middleware.js";
 
 const router = Router();
 
@@ -30,10 +31,13 @@ router.route("/upload").post(
 );
 
 router.route("/search").get(verifyJWT, searchSong);
-router.route("/updateSong/:songId").patch(verifyJWT, updateSongDetail);
-router.route("/delete/:songId").delete(verifyJWT, deleteSong);
+router
+  .route("/updateSong/:songId")
+  .patch(verifyJWT, isSongOwner, updateSongDetail);
+router.route("/delete/:songId").delete(verifyJWT, isSongOwner, deleteSong);
 router.route("/:songId/thumbnail").patch(
   verifyJWT,
+  isSongOwner,
   upload.fields([
     {
       name: "thumbnail",
