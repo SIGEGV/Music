@@ -1,3 +1,5 @@
+import Sentiment from "sentiment";
+
 const STATUS_CODE = {
   SUCCESS: 200,
   BAD_REQUEST: 400,
@@ -108,6 +110,8 @@ const REDIS = {
 const FILE_TYPE_CLOUDINARY = {
   AUDIO: "audio",
 };
+
+const SENTIMENT = new Sentiment();
 export {
   STATUS_CODE,
   RESPONSE_MESSAGES,
@@ -117,4 +121,5 @@ export {
   EMAIL_FOR_OTP,
   REDIS,
   FILE_TYPE_CLOUDINARY,
+  SENTIMENT,
 };

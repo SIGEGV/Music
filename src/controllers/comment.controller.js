@@ -5,6 +5,7 @@ import { apiResponse } from "../utils/apiResponse.js";
 import {
   ERROR_MESSAGES,
   RESPONSE_MESSAGES,
+  SENTIMENT,
   STATUS_CODE,
 } from "./controller.constants.js";
 import { redisClient } from "../utils/redis.js";
@@ -35,10 +36,14 @@ const CommentOnSong = asyncHandler(async (req, res) => {
   if (!content || content.trim() === "") {
     throw new apiError(STATUS_CODE.BAD_REQUEST, ERROR_MESSAGES.INVALID_CONTENT);
   }
+  const sentimentResult = SENTIMENT.analyze(content).score;
+
   const NEW_COMMENT = await COMMENTS.create({
     content: content.trim(),
     song: songId,
     user: LOGGED_USER._id,
+    isFlagged: sentimentResult < -4,
+    sentimentScore: sentimentResult,
   });
   if (!NEW_COMMENT) {
     throw new apiError(
@@ -97,11 +102,14 @@ const replyToComment = asyncHandler(async (req, res) => {
       ERROR_MESSAGES.PARENT_COMMENT_NOT_FOUND
     );
   }
+  const sentimentResult = SENTIMENT.analyze(content).score;
   const REPLY = await COMMENTS.create({
     content: content.trim(),
     song: songId,
     user: LOGGED_USER_ID,
     parentComment: parentId,
+    isFlagged: sentimentResult < -4,
+    sentimentScore: sentimentResult,
   });
   if (!REPLY) {
     throw new apiError(
@@ -280,10 +288,47 @@ const deleteComment = asyncHandler(async (req, res) => {
       )
     );
 });
+
+const nukeComment = asyncHandler(async (req, res) => {
+  const { commentId } = req.params;
+  const allCommentIdsToDelete = [];
+
+  const collectNestedComments = async (id) => {
+    allCommentIdsToDelete.push(id);
+
+    const replies = await COMMENTS.find({ parentComment: id }).select("_id");
+    for (const reply of replies) {
+      await collectNestedComments(reply._id);
+    }
+  };
+
+  await collectNestedComments(commentId);
+
+  const isDeleted = await COMMENTS.deleteMany({
+    _id: { $in: allCommentIdsToDelete },
+  });
+  if (!isDeleted) {
+    throw new apiError(
+      STATUS_CODE.INTERNAL_SERVER_ERROR,
+      ERROR_MESSAGES.COMMENTS_DELETION_FAILED
+    );
+  }
+  await COMMENTS_LIKE.deleteMany({ commentId: { $in: allCommentIdsToDelete } });
+  return res
+    .status(STATUS_CODE.SUCCESS)
+    .json(
+      new apiResponse(
+        STATUS_CODE.SUCCESS,
+        {},
+        RESPONSE_MESSAGES.COMMENTS_DELETED_SUCCESSFULLY
+      )
+    );
+});
 export {
   CommentOnSong,
   replyToComment,
   likeComment,
   unlikeComment,
   deleteComment,
+  nukeComment,
 };
