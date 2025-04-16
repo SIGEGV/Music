@@ -35,6 +35,8 @@
     "node-cron": "^3.0.3",
     "nodemailer": "^6.10.0",
     "otp-generator": "^4.0.1",
-    "redis": "^4.7.0"
+    "redis": "^4.7.0",
+    "sentiment": "^5.0.2",
+    "sentimental": "^0.1.2"
   }
 }
