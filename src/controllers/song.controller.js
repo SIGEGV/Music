@@ -208,16 +208,16 @@ const updateSongDetail = asyncHandler(async (req, res) => {
  */
 const deleteSong = asyncHandler(async (req, res) => {
   const { songId } = req.params;
-  const deletedSong = await SONG.findByIdAndDelete(songId);
+  const song = await SONG.findById(songId);
 
-  if (!deletedSong) {
+  if (!song) {
     throw new apiError(STATUS_CODE.NOT_FOUND, ERROR_MESSAGES.SONG_NOT_FOUND);
   }
-
+  song.deleteOne();
   return res
     .status(STATUS_CODE.SUCCESS)
     .json(
-      new apiResponse(STATUS_CODE.SUCCESS, {}, ERROR_MESSAGES.SONG_DELETED)
+      new apiResponse(STATUS_CODE.SUCCESS, {}, RESPONSE_MESSAGES.SONG_DELETED)
     );
 });
 

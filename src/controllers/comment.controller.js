@@ -9,6 +9,7 @@ import {
   STATUS_CODE,
 } from "./controller.constants.js";
 import { redisClient } from "../utils/redis.js";
+import mongoose from "mongoose";
 /**
  * @description Allows a user to post a comment on a song.
  * @async
@@ -324,6 +325,35 @@ const nukeComment = asyncHandler(async (req, res) => {
       )
     );
 });
+
+const commentAnalytics = asyncHandler(async (req, res) => {
+  const { songId } = req.params;
+  if (!mongoose.Types.ObjectId.isValid(songId)) {
+    throw new apiError(STATUS_CODE.BAD_REQUEST, "Invalid Song ID");
+  }
+  const comments = await COMMENTS.find({ song: songId });
+  if (!comments) {
+    throw new apiError(STATUS_CODE.NOT_FOUND, ERROR_MESSAGES.COMMENT_NOT_FOUND);
+  }
+  const positive = comments.filter((c) => c.sentimentScore > 0).length;
+  const negative = comments.filter((c) => c.sentimentScore < 0).length;
+  const neutral = comments.filter((c) => c.sentimentScore === 0).length;
+  const Payload = {
+    Total: comments.length,
+    Positive: positive,
+    Negative: negative,
+    Neutral: neutral,
+  };
+  return res
+    .status(STATUS_CODE.SUCCESS)
+    .json(
+      new apiResponse(
+        STATUS_CODE.SUCCESS,
+        { Payload },
+        RESPONSE_MESSAGES.DATA_FOR_ANALYTICS
+      )
+    );
+});
 export {
   CommentOnSong,
   replyToComment,
@@ -331,4 +361,5 @@ export {
   unlikeComment,
   deleteComment,
   nukeComment,
+  commentAnalytics,
 };

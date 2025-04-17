@@ -43,6 +43,8 @@ const RESPONSE_MESSAGES = {
   // Views & Analytics
   SONG_VIEW_NOT_COUNTED: "Fetched song, but view was recently counted.",
   SONG_VIEW_COUNTED: "Fetched song and view was counted.",
+  DATA_FOR_ANALYTICS:
+    "Payload is Sent with Total,Positive,Negative and Neutral Fields ",
 };
 
 const ERROR_MESSAGES = {

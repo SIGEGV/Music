@@ -93,7 +93,9 @@ const registerUser = asyncHandler(async (req, res) => {
   }
   tempUserStorage[email] = { fullname, username, password, avatarPath };
   const generateOtp = otpGenerator.generate(6, {
+    digits: true,
     upperCaseAlphabets: false,
+    lowerCaseAlphabets: false,
     specialChars: false,
   });
   const hashedOtp = await bcrypt.hash(generateOtp, 10);
