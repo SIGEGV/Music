@@ -6,17 +6,34 @@
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-import { STATIC_FOLDER, TRAFIC_LIMIT } from "./constants.js";
+import {
+  CORS_ALLOWED_HEADERS,
+  CORS_METHODS,
+  LOCAL_DEVELOPEMENT_ORIGINS,
+  PRODUCTION,
+  STATIC_FOLDER,
+  TRAFIC_LIMIT,
+} from "./constants.js";
 
 const app = express();
 
 // CORS configuration
+const allowedOrigins =
+  process.env.NODE_ENV === PRODUCTION
+    ? [process.env.CORS_ORIGIN] // In production, only allow specific origins
+    : LOCAL_DEVELOPEMENT_ORIGINS; // Local development origins
+
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN,
-    credentials: true,
+    origin: allowedOrigins,
+    methods: CORS_METHODS, // Specify allowed methods
+    allowedHeaders: CORS_ALLOWED_HEADERS, // Specify allowed headers
+    credentials: true, // Allow credentials like cookies and authorization headers
+    preflightContinue: false, // Continue after a preflight request
+    optionsSuccessStatus: 204, // Set status code for successful OPTIONS requests
   })
 );
+app.options("*", cors());
 
 // Middleware for parsing JSON and URL-encoded data
 app.use(express.json({ limit: TRAFIC_LIMIT }));
