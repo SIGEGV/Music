@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 import {
+  commentAnalytics,
   CommentOnSong,
   deleteComment,
   likeComment,
@@ -17,4 +18,7 @@ router.route("/:commentId/like").post(verifyJWT, likeComment);
 router.route("/:commentId/unlike").post(verifyJWT, unlikeComment);
 router.route("/:commentId/delete").delete(verifyJWT, deleteComment);
 router.route("/nuke/:commentId").delete(verifyJWT, isSongOwner, nukeComment);
+router
+  .route("/analytics/:songId")
+  .get(verifyJWT, isSongOwner, commentAnalytics);
 export default router;
