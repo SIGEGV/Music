@@ -475,6 +475,36 @@ const getSongAndUpdateViews = asyncHandler(async (req, res) => {
       )
     );
 });
+
+const homepageSongs = asyncHandler(async (req, res) => {
+  try {
+    const aggregateQuery = SONG.aggregate([{ $sort: { createdAt: -1 } }]);
+    const option = {
+      page: parseInt(req.query.page) || 1,
+      limit: parseInt(req.query.limit) || 5,
+    };
+    const result = await SONG.aggregatePaginate(aggregateQuery, option);
+    res
+      .status(200)
+      .json(
+        new apiResponse(
+          STATUS_CODE.SUCCESS,
+          result.docs,
+          RESPONSE_MESSAGES.SUCCESS
+        )
+      );
+  } catch (err) {
+    console.error("Error fetching songs with pagination:", err);
+    res
+      .status(500)
+      .json(
+        new apiError(
+          STATUS_CODE.INTERNAL_SERVER_ERROR,
+          ERROR_MESSAGES.FAILED_HOMEPAGE_QUERY
+        )
+      );
+  }
+});
 export {
   uploadAudio,
   searchSong,
@@ -484,4 +514,5 @@ export {
   likeSong,
   unlikeSong,
   getSongAndUpdateViews,
+  homepageSongs,
 };

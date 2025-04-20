@@ -6,7 +6,7 @@ const PRODUCTION = "P";
 const PATH = "./env";
 const CORS_METHODS = ["GET", "POST", "PUT", "DELETE", "PATCH"];
 const CORS_ALLOWED_HEADERS = ["Content-Type", "Authorization"];
-const LOCAL_DEVELOPEMENT_ORIGINS = ["http://localhost:3000"];
+const LOCAL_DEVELOPEMENT_ORIGINS = ["http://localhost:5173", "*"];
 export {
   DB_NAME,
   DEFAULT_PORT,

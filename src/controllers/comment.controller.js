@@ -289,7 +289,18 @@ const deleteComment = asyncHandler(async (req, res) => {
       )
     );
 });
-
+/**
+ * @desc Deletes a comment and all of its nested replies (recursively),
+ *       along with their likes from the database.
+ * @route DELETE /api/comments/:commentId/nuke
+ * @access Private
+ *
+ * @param {Object} req - Express request object
+ * @param {Object} req.params - URL parameters
+ * @param {string} req.params.commentId - The ID of the comment to delete
+ * @param {Object} res - Express response object
+ * @returns {Object} Success response if deletion was successful
+ */
 const nukeComment = asyncHandler(async (req, res) => {
   const { commentId } = req.params;
   const allCommentIdsToDelete = [];
@@ -325,7 +336,17 @@ const nukeComment = asyncHandler(async (req, res) => {
       )
     );
 });
-
+/**
+ * @desc Provides sentiment analysis statistics for comments on a song
+ * @route GET /api/comments/:songId/analytics
+ * @access Public
+ *
+ * @param {Object} req - Express request object
+ * @param {Object} req.params - URL parameters
+ * @param {string} req.params.songId - The ID of the song to analyze comments for
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response containing total, positive, negative, and neutral comment counts
+ */
 const commentAnalytics = asyncHandler(async (req, res) => {
   const { songId } = req.params;
   if (!mongoose.Types.ObjectId.isValid(songId)) {

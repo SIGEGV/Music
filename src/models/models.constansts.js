@@ -31,6 +31,7 @@ const SCHEMA_NAMES = {
   USER: "User",
   LIKE: "Like",
   OTP: "Otp",
+  TEMP_USER: "TempUser",
 };
 
 export { USER_FIELDS, SONG_FIELDS, SCHEMA_NAMES };

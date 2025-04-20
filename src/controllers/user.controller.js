@@ -17,6 +17,7 @@ import {
   STATUS_CODE,
 } from "./controller.constants.js";
 import { SONG_FIELDS, USER_FIELDS } from "../models/models.constansts.js";
+import { PRODUCTION } from "../constants.js";
 
 /**
  * Generates access and refresh tokens for a user.
@@ -112,7 +113,7 @@ const registerUser = asyncHandler(async (req, res) => {
     );
   }
   const options = {
-    httpOnly: true,
+    httpOnly: process.env.NODE_ENV === PRODUCTION,
     secure: true,
     maxAge: 5 * 60 * 1000,
   };
@@ -337,7 +338,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     const { newAccessToken, newRefreshToken } =
       await generateAccessAndRefreshToken(user._id);
     const options = {
-      httpOnly: true,
+      httpOnly: process.env.NODE_ENV === PRODUCTION,
       secure: true,
     };
 

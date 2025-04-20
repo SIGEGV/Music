@@ -45,6 +45,8 @@ const RESPONSE_MESSAGES = {
   SONG_VIEW_COUNTED: "Fetched song and view was counted.",
   DATA_FOR_ANALYTICS:
     "Payload is Sent with Total,Positive,Negative and Neutral Fields ",
+
+  SUCESS: "SUCEESS IN YOUR ROuTE",
 };
 
 const ERROR_MESSAGES = {
@@ -86,6 +88,7 @@ const ERROR_MESSAGES = {
   SONG_DELETE_FAILED: "Song does not exist or could not be deleted.",
   SONG_LIKED_FAILED: "Failed to Like the Song. Please try again",
   SONG_UNLIKED_FAILED: "Failed to Unlike the Song. Please try again",
+  FAILED_HOMEPAGE_QUERY: "Failed to fetch songs",
   //Comments
   INVALID_CONTENT: "Content is required",
   INVALID_PARENT_ID: "Enter a valid Parrent Comment Id",

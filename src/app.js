@@ -22,6 +22,7 @@ const allowedOrigins =
   process.env.NODE_ENV === PRODUCTION
     ? [process.env.CORS_ORIGIN] // In production, only allow specific origins
     : LOCAL_DEVELOPEMENT_ORIGINS; // Local development origins
+console.log("Allowed Origins:", allowedOrigins);
 
 app.use(
   cors({
