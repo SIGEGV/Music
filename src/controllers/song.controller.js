@@ -82,7 +82,11 @@ const uploadAudio = asyncHandler(async (req, res) => {
     duration: duration,
     owner: userId,
   });
-  const songUploaded = await SONG.findById(song._id);
+  const songUploaded = await SONG.findById(song._id).populate(
+    SONG_FIELDS.OWNER,
+    `${USER_FIELDS.USERNAME} ${USER_FIELDS.FULLNAME} ${USER_FIELDS.AVATAR}`
+  );
+
   if (!songUploaded) {
     throw new apiError(
       STATUS_CODE.INTERNAL_SERVER_ERROR,
@@ -478,18 +482,40 @@ const getSongAndUpdateViews = asyncHandler(async (req, res) => {
 
 const homepageSongs = asyncHandler(async (req, res) => {
   try {
-    const aggregateQuery = SONG.aggregate([{ $sort: { createdAt: -1 } }]);
+    const aggregateQuery = SONG.aggregate([
+      { $sort: { createdAt: -1 } },
+      {
+        $lookup: {
+          from: "users", // The name of your users collection
+          localField: "owner", // The field in songs collection that stores the user ID
+          foreignField: "_id", // The field in users collection that stores the user ID
+          as: "ownerDetails", // The name of the array field to store user details
+        },
+      },
+      {
+        $unwind: { path: "$ownerDetails", preserveNullAndEmptyArrays: true }, // Flatten the array of ownerDetails
+      },
+    ]);
+
     const option = {
       page: parseInt(req.query.page) || 1,
       limit: parseInt(req.query.limit) || 5,
     };
+
     const result = await SONG.aggregatePaginate(aggregateQuery, option);
+
+    // Ensure the response contains the full name and username
+    const songsWithOwnerDetails = result.docs.map((song) => ({
+      ...song,
+      owner: song.ownerDetails ? `${song.ownerDetails.username}` : "Unknown",
+    }));
+
     res
       .status(200)
       .json(
         new apiResponse(
           STATUS_CODE.SUCCESS,
-          result.docs,
+          songsWithOwnerDetails,
           RESPONSE_MESSAGES.SUCCESS
         )
       );
@@ -505,6 +531,37 @@ const homepageSongs = asyncHandler(async (req, res) => {
       );
   }
 });
+
+const getUserSongs = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+  if (!userId || userId === "") {
+    throw new apiError(
+      STATUS_CODE.UNAUTHORIZED,
+      ERROR_MESSAGES.UNAUTHORIZED_REQUEST
+    );
+  }
+  const songs = await SONG.find({ owner: userId });
+  if (!songs) {
+    return res
+      .status(STATUS_CODE.SUCCESS)
+      .json(
+        new apiResponse(
+          STATUS_CODE.SUCCESS,
+          {},
+          RESPONSE_MESSAGES.NO_SONG_AVAILABLE
+        )
+      );
+  }
+  return res
+    .status(STATUS_CODE.SUCCESS)
+    .json(
+      new apiResponse(
+        STATUS_CODE.SUCCESS,
+        { songs },
+        RESPONSE_MESSAGES.SONG_FETCHED
+      )
+    );
+});
 export {
   uploadAudio,
   searchSong,
@@ -515,4 +572,5 @@ export {
   unlikeSong,
   getSongAndUpdateViews,
   homepageSongs,
+  getUserSongs,
 };

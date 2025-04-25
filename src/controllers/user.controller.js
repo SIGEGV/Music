@@ -13,11 +13,11 @@ import { sendOtp } from "../utils/mailService.js";
 import {
   EMAIL_FOR_OTP,
   ERROR_MESSAGES,
+  OPTIONS,
   RESPONSE_MESSAGES,
   STATUS_CODE,
 } from "./controller.constants.js";
 import { SONG_FIELDS, USER_FIELDS } from "../models/models.constansts.js";
-import { PRODUCTION } from "../constants.js";
 
 /**
  * Generates access and refresh tokens for a user.
@@ -113,7 +113,7 @@ const registerUser = asyncHandler(async (req, res) => {
     );
   }
   const options = {
-    httpOnly: process.env.NODE_ENV === PRODUCTION,
+    httpOnly: true,
     secure: true,
     maxAge: 5 * 60 * 1000,
   };
@@ -234,15 +234,11 @@ const loginUser = asyncHandler(async (req, res) => {
   const loggedInUser = await USER.findById(user._id).select(
     `-${USER_FIELDS.PASSWORD} -${USER_FIELDS.REFRESH_TOKEN}`
   );
-  const options = {
-    httpOnly: true,
-    secure: true,
-  };
 
   return res
     .status(STATUS_CODE.SUCCESS)
-    .cookie("accessToken", accessToken, options)
-    .cookie("refreshToken", refreshToken, options)
+    .cookie("accessToken", accessToken, OPTIONS)
+    .cookie("refreshToken", refreshToken, OPTIONS)
     .json(
       new apiResponse(
         STATUS_CODE.SUCCESS,
@@ -276,15 +272,11 @@ const loggedoutUser = asyncHandler(async (req, res) => {
       new: true,
     }
   );
-  const options = {
-    httpOnly: true,
-    secure: true,
-  };
 
   return res
     .status(STATUS_CODE.SUCCESS)
-    .clearCookie("accessToken", options)
-    .clearCookie("refreshToken", options)
+    .clearCookie("accessToken", OPTIONS)
+    .clearCookie("refreshToken", OPTIONS)
     .json(
       new apiResponse(
         STATUS_CODE.SUCCESS,
@@ -337,15 +329,11 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 
     const { newAccessToken, newRefreshToken } =
       await generateAccessAndRefreshToken(user._id);
-    const options = {
-      httpOnly: process.env.NODE_ENV === PRODUCTION,
-      secure: true,
-    };
 
     return res
       .status(STATUS_CODE.SUCCESS)
-      .cookie("accessToken", newAccessToken, options)
-      .cookie("refreshToken", newRefreshToken, options)
+      .cookie("accessToken", newAccessToken, OPTIONS)
+      .cookie("refreshToken", newRefreshToken, OPTIONS)
       .json(
         new apiResponse(
           STATUS_CODE.SUCCESS,
@@ -374,7 +362,6 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
  */
 const changeCurrentPassword = asyncHandler(async (req, res) => {
   const { oldPassword, newPassword, confirmPassword } = req.body;
-  console.log(oldPassword, newPassword, confirmPassword);
   const user = req.user;
 
   try {
@@ -383,6 +370,12 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
       throw new apiError(
         STATUS_CODE.BAD_REQUEST,
         ERROR_MESSAGES.INCORRECT_OLD_PASSWORD
+      );
+    }
+    if (!confirmPassword || !oldPassword || !newPassword) {
+      throw new apiError(
+        ERROR_MESSAGES.BAD_REQUEST,
+        ERROR_MESSAGES.MISSING_FIELDS
       );
     }
     if (newPassword !== confirmPassword) {

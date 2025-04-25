@@ -350,7 +350,10 @@ const nukeComment = asyncHandler(async (req, res) => {
 const commentAnalytics = asyncHandler(async (req, res) => {
   const { songId } = req.params;
   if (!mongoose.Types.ObjectId.isValid(songId)) {
-    throw new apiError(STATUS_CODE.BAD_REQUEST, "Invalid Song ID");
+    throw new apiError(
+      STATUS_CODE.BAD_REQUEST,
+      ERROR_MESSAGES.INVALID_SONG_FIELD
+    );
   }
   const comments = await COMMENTS.find({ song: songId });
   if (!comments) {

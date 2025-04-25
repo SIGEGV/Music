@@ -33,6 +33,7 @@ const RESPONSE_MESSAGES = {
   SONG_ALREADY_LIKED: "Song has already been liked.",
   SONG_ALREADY_UNLIKED: "Song is already unliked.",
   THUMBNAIL_UPDATED: "Thumbnail updated successfully.",
+  NO_SONG_AVAILABLE: "You Dont have Any Song Uploded",
   // Comments
   COMMENT_UPLOADED: "Comment Updated Successfully",
   COMMENT_ALREADY_LIKED: "Comment has Already been liked ",
@@ -46,7 +47,7 @@ const RESPONSE_MESSAGES = {
   DATA_FOR_ANALYTICS:
     "Payload is Sent with Total,Positive,Negative and Neutral Fields ",
 
-  SUCESS: "SUCEESS IN YOUR ROuTE",
+  SUCCESS: "SUCEESS IN YOUR ROuTE",
 };
 
 const ERROR_MESSAGES = {
@@ -88,6 +89,7 @@ const ERROR_MESSAGES = {
   SONG_DELETE_FAILED: "Song does not exist or could not be deleted.",
   SONG_LIKED_FAILED: "Failed to Like the Song. Please try again",
   SONG_UNLIKED_FAILED: "Failed to Unlike the Song. Please try again",
+  INVALID_SONG_FIELD: "Invalid Song Field",
   FAILED_HOMEPAGE_QUERY: "Failed to fetch songs",
   //Comments
   INVALID_CONTENT: "Content is required",
@@ -115,6 +117,13 @@ const REDIS = {
 const FILE_TYPE_CLOUDINARY = {
   AUDIO: "audio",
 };
+const ISPRODUCTION = process.env.NODE_ENV === "production";
+
+const OPTIONS = {
+  httpOnly: true, // always true for security
+  secure: ISPRODUCTION, // only true in production (HTTPS)
+  sameSite: ISPRODUCTION ? "Strict" : "Lax",
+};
 
 const SENTIMENT = new Sentiment();
 export {
@@ -127,4 +136,5 @@ export {
   REDIS,
   FILE_TYPE_CLOUDINARY,
   SENTIMENT,
+  OPTIONS,
 };
