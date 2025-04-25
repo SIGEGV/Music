@@ -4,6 +4,7 @@ import { upload } from "../middlewares/multer.middleware.js";
 import {
   deleteSong,
   getSongAndUpdateViews,
+  getUserSongs,
   homepageSongs,
   likeSong,
   searchSong,
@@ -50,5 +51,6 @@ router.route("/:songId/thumbnail").patch(
 router.route("/:songId/like").post(verifyJWT, likeSong);
 router.route("/:songId/unlike").post(verifyJWT, unlikeSong);
 router.route("/:songId").post(verifyJWT, getSongAndUpdateViews);
-router.get("/home", homepageSongs);
+router.route("/home").get(verifyJWT, homepageSongs);
+router.route("/userSongs").get(verifyJWT, getUserSongs);
 export default router;
