@@ -302,7 +302,7 @@ const likeSong = asyncHandler(async (req, res) => {
     const userId = req.user._id.toString();
     const songKey = `song:${songId}`;
     const redisSetKey = `${songKey}:likedBy`;
-    const songIdExist = await COMMENTS.findById(songId);
+    const songIdExist = await SONG.findById(songId);
     if (!songIdExist) {
       throw new apiError(
         STATUS_CODE.NOT_FOUND,
@@ -361,6 +361,7 @@ const unlikeSong = asyncHandler(async (req, res) => {
     const userId = req.user._id.toString();
     const songKey = `song:${songId}`;
     const redisSetKey = `${songKey}:likedBy`;
+    const songIdExist = await SONG.findById(songId);
     if (!songIdExist) {
       throw new apiError(
         STATUS_CODE.NOT_FOUND,
