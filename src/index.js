@@ -21,7 +21,7 @@ await connectRedis();
 connectDB()
   .then(() => {
     app.listen(process.env.PORT || DEFAULT_PORT, () => {
-      console.log(`Server is running at port: ${process.env.PORT}`);
+      console.log(`Server is running at port: ${process.env.PORT|| DEFAULT_PORT}`);
     });
   })
   .catch((err) => {

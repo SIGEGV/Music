@@ -18,7 +18,6 @@ import {
   STATUS_CODE,
 } from "./controller.constants.js";
 import { SONG_FIELDS, USER_FIELDS } from "../models/models.constansts.js";
-
 /**
  * Generates access and refresh tokens for a user.
  *
@@ -187,7 +186,6 @@ const verifyUserOtpAndRegister = asyncHandler(async (req, res) => {
  * @route POST /login
  * @group User - Operations related to user authentication
  * @param {Object} req.body - The login data
- * @param {string} req.body.username - The username of the user trying to log in
  * @param {string} req.body.email - The email of the user trying to log in
  * @param {string} req.body.password - The password of the user trying to log in
  * @returns {Object} 200 - User successfully logged in with access and refresh tokens
@@ -199,21 +197,19 @@ const verifyUserOtpAndRegister = asyncHandler(async (req, res) => {
  * If valid, the user is logged in, and access and refresh tokens are issued and sent as cookies.
  */
 const loginUser = asyncHandler(async (req, res) => {
-  const { username, email, password } = req.body;
-  if (!(username || email || password)) {
+  const { email, password } = req.body;
+  if (!( email || password)) {
     throw new apiError(STATUS_CODE.BAD_REQUEST, ERROR_MESSAGES.MISSING_FIELDS);
   }
-  const user = await USER.findOne({
-    $or: [{ username }, { email }],
-  });
+  const user = await USER.findOne({email});
 
   if (!user) {
     throw new apiError(STATUS_CODE.NOT_FOUND, ERROR_MESSAGES.USER_NOT_FOUND);
   }
 
-  if (username && email) {
+  if (email) {
     const emailUser = await USER.findOne({ email });
-    if (!emailUser || emailUser.username !== username) {
+    if (!emailUser) {
       throw new apiError(
         STATUS_CODE.BAD_REQUEST,
         ERROR_MESSAGES.INVALID_CREDENTIALS
@@ -225,7 +221,7 @@ const loginUser = asyncHandler(async (req, res) => {
   if (!isPasswordValid) {
     throw new apiError(
       STATUS_CODE.UNAUTHORIZED,
-      ERROR_MESSAGES.INVALID_CREDENTIALS
+      ERROR_MESSAGES.INVALID_PASSWORD
     );
   }
   const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
