@@ -378,6 +378,36 @@ const commentAnalytics = asyncHandler(async (req, res) => {
       )
     );
 });
+/**
+ * @route   GET /api/v1/comments/:songId/comments
+ * @desc    Fetch all comments for a given song by its ID
+ * @access  Protected 
+ * @param   {Object} req - Express request object
+ * @param   {Object} req.params - URL parameters
+ * @param   {string} req.params.songId - The ID of the song to fetch comments for
+ * @param   {Object} res - Express response object
+ * @returns {Object} JSON response with status code and list of comments
+ *
+ * @throws  {apiError} 400 - If songId is missing from request parameters
+ */
+const getAllComments = asyncHandler(async (req, res) => {
+  const { songId } = req.params;
+
+  if (!songId) {
+    throw new apiError(STATUS_CODE.BAD_REQUEST, ERROR_MESSAGES.SONGID_REQUIRED);
+  }
+
+  const Comments = await COMMENTS.find({ song: songId });
+  console.log(Comments);
+
+  return res.status(200).json(
+    new apiResponse(
+      STATUS_CODE.SUCCESS,
+      { Comments },
+      RESPONSE_MESSAGES.COMMENTS_FETCHED
+    )
+  );
+});
 export {
   CommentOnSong,
   replyToComment,
@@ -386,4 +416,5 @@ export {
   deleteComment,
   nukeComment,
   commentAnalytics,
+  getAllComments
 };

@@ -4,6 +4,7 @@ import {
   commentAnalytics,
   CommentOnSong,
   deleteComment,
+  getAllComments,
   likeComment,
   nukeComment,
   replyToComment,
@@ -11,7 +12,7 @@ import {
 } from "../controllers/comment.controller.js";
 import { isSongOwner } from "../middlewares/isSongOwner.middleware.js";
 const router = Router();
-
+router.route("/:songId/comments").get(verifyJWT, getAllComments)
 router.route("/:songId").post(verifyJWT, CommentOnSong);
 router.route("/:songId/reply/:parentId").post(verifyJWT, replyToComment);
 router.route("/:commentId/like").post(verifyJWT, likeComment);

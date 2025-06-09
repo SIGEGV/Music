@@ -14,6 +14,7 @@ import {
 } from "../controllers/user.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
+import { otpVerifyLimiter } from "../middlewares/rateLimiter.middleware.js";
 const router = Router();
 
 router.route("/register").post(
@@ -25,7 +26,7 @@ router.route("/register").post(
   ]),
   registerUser
 );
-router.route("/verify-otp").post(verifyUserOtpAndRegister);
+router.route("/verify-otp").post(otpVerifyLimiter,verifyUserOtpAndRegister);
 
 router.route("/login").post(loginUser);
 

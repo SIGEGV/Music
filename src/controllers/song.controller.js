@@ -480,6 +480,21 @@ const getSongAndUpdateViews = asyncHandler(async (req, res) => {
       )
     );
 });
+/**
+ * @route   GET /api/v1/songs/home
+ * @desc    Fetch paginated list of latest songs with their owner (artist) details
+ * @access  Public
+ *
+ * @param   {Object} req - Express request object
+ * @param   {Object} req.query - Query parameters for pagination
+ * @param   {number} req.query.page - Page number for pagination (default: 1)
+ * @param   {number} req.query.limit - Number of songs per page (default: 5)
+ * @param   {Object} res - Express response object
+ *
+ * @returns {Object} JSON response with paginated songs and embedded artist name
+ *
+ * @throws  {apiError} 500 - Internal Server Error if aggregation fails
+ */
 
 const homepageSongs = asyncHandler(async (req, res) => {
   try {
@@ -532,17 +547,35 @@ const homepageSongs = asyncHandler(async (req, res) => {
       );
   }
 });
-
+/**
+ * @route   GET /api/v1/songs/userSongs
+ * @desc    Fetch all songs uploaded by the currently authenticated user
+ * @access  Protected (requires authentication)
+ *
+ * @param   {Object} req - Express request object
+ * @param   {Object} req.user - Authenticated user object (from middleware)
+ * @param   {string} req.user._id - User ID of the authenticated user
+ * @param   {string} [req.user.username|userName|artist] - Username of the artist
+ * @param   {Object} res - Express response object
+ *
+ * @returns {Object} JSON response with all user songs including embedded artist name
+ *
+ * @throws  {apiError} 401 - If user ID is missing (unauthorized request)
+ */
 const getUserSongs = asyncHandler(async (req, res) => {
   const userId = req.user._id;
+  const artistName = req.user.userName || req.user.username || req.user.artist;
+
   if (!userId || userId === "") {
     throw new apiError(
       STATUS_CODE.UNAUTHORIZED,
       ERROR_MESSAGES.UNAUTHORIZED_REQUEST
     );
   }
-  const songs = await SONG.find({ owner: userId });
-  if (!songs) {
+
+  let songs = await SONG.find({ owner: userId });
+
+  if (!songs.length) {
     return res
       .status(STATUS_CODE.SUCCESS)
       .json(
@@ -553,16 +586,28 @@ const getUserSongs = asyncHandler(async (req, res) => {
         )
       );
   }
+
+  // Embed artist name inside each song object
+  songs = songs.map(song => {
+    // Convert mongoose document to plain object to safely add new field
+    const songObj = song.toObject();
+    songObj.artist = artistName;
+    return songObj;
+  });
+
   return res
     .status(STATUS_CODE.SUCCESS)
     .json(
       new apiResponse(
         STATUS_CODE.SUCCESS,
-        { songs },
+        {
+          songs,
+        },
         RESPONSE_MESSAGES.SONG_FETCHED
       )
     );
 });
+
 export {
   uploadAudio,
   searchSong,
