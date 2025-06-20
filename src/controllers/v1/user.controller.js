@@ -1,23 +1,23 @@
-import { asyncHandler } from "../utils/asyncHandler.js";
-import { apiError } from "../utils/apiError.js";
-import { USER } from "../models/user.model.js";
-import { uploadOnCloudinary } from "../utils/Cloudinary.service.js";
-import { apiResponse } from "../utils/apiResponse.js";
+import { asyncHandler } from "../../utils/asyncHandler.js";
+import { apiError } from "../../utils/apiError.js";
+import { USER } from "../../models/user.model.js";
+import { uploadOnCloudinary } from "../../utils/Cloudinary.service.js";
+import { apiResponse } from "../../utils/apiResponse.js";
 import jwt from "jsonwebtoken";
-import { SONG } from "../models/song.model.js";
-import { OTP } from "../models/otp.model.js";
+import { SONG } from "../../models/song.model.js";
+import { OTP } from "../../models/otp.model.js";
 import otpGenerator from "otp-generator";
 import bcrypt from "bcrypt";
-import tempUserStorage from "../utils/tempUserStorage.js";
-import { sendOtp } from "../utils/mailService.js";
+import tempUserStorage from "../../utils/tempUserStorage.js";
+import { sendOtp } from "../../utils/mailService.js";
 import {
   EMAIL_FOR_OTP,
   ERROR_MESSAGES,
   OPTIONS,
   RESPONSE_MESSAGES,
   STATUS_CODE,
-} from "./controller.constants.js";
-import { SONG_FIELDS, USER_FIELDS } from "../models/models.constansts.js";
+} from "../controller.constants.js";
+import { SONG_FIELDS, USER_FIELDS } from "../../models/models.constansts.js";
 /**
  * Generates access and refresh tokens for a user.
  *
@@ -440,12 +440,12 @@ const updateUserDetail = asyncHandler(async (req, res) => {
   try {
     const { fullname, email, username } = req.body;
 
-    if (!fullname && !email && !username) {
-      throw new apiError(
-        STATUS_CODE.BAD_REQUEST,
-        ERROR_MESSAGES.MISSING_FIELDS
-      );
-    }
+    // if (!fullname && !email && !username) {
+    //   throw new apiError(
+    //     STATUS_CODE.BAD_REQUEST,
+    //     ERROR_MESSAGES.MISSING_FIELDS
+    //   );
+    // }
 
     if (email) {
       const existingEmailUser = await USER.findOne({ email: email.toLowerCase() });

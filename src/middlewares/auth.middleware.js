@@ -23,21 +23,22 @@ import { USER_FIELDS } from "../models/models.constansts.js";
  */
 
 export const verifyJWT = asyncHandler(async (req, _, next) => {
-  try {
-    const Token =
-      req.cookies?.accessToken ||
-      req.header("Authorization")?.replace("Bearer ", ""); // for Mobile Apps
+  const token =
+    req.cookies?.accessToken ||
+    req.header("Authorization")?.replace("Bearer ", "");
 
-    if (!Token) {
-      throw new apiError(
-        STATUS_CODES.UNAUTHORIZED,
-        ERROR_MESSAGES.UNAUTHORIZED_REQUEST
-      );
-    }
-    const decodedUser = jwt.verify(Token, process.env.ACCESS_TOKEN_SECRET);
-    const user = await USER.findById(decodedUser._id).select(
-      `-${USER_FIELDS.REFRESH_TOKEN}`
+  if (!token) {
+    console.warn("No token provided in request");
+    throw new apiError(
+      STATUS_CODES.UNAUTHORIZED,
+      ERROR_MESSAGES.UNAUTHORIZED_REQUEST
     );
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+    const user = await USER.findById(decoded._id).select("-refreshToken");
+
     if (!user) {
       throw new apiError(
         STATUS_CODES.UNAUTHORIZED,
@@ -47,10 +48,11 @@ export const verifyJWT = asyncHandler(async (req, _, next) => {
 
     req.user = user;
     next();
-  } catch (error) {
+  } catch (err) {
+    console.error("JWT verification failed:", err.message);
     throw new apiError(
       STATUS_CODES.UNAUTHORIZED,
-      ERROR_MESSAGES.INVALID_ACCESS_TOKEN
+      ERROR_MESSAGES.UNAUTHORIZED_REQUEST
     );
   }
 });

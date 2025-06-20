@@ -43,10 +43,12 @@ app.use(express.static(STATIC_FOLDER));
 app.use(cookieParser());
 
 // Import and use routers
-import userRouter from "./routes/user.routes.js";
-import songRouter from "./routes/song.routes.js";
-import commentRouter from "./routes/comments.routes.js";
+import userRouter from "./routes/v1/user.routes.js";
+import songRouter from "./routes/v1/song.routes.js";
+import commentRouter from "./routes/v1/comments.routes.js";
 
+
+                                        /*  UpBeats Version One Api  */
 /**
  * @route /api/v1/users
  * @description Routes for user-related operations.

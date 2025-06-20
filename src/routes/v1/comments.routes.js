@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { verifyJWT } from "../middlewares/auth.middleware.js";
+import { verifyJWT } from "../../middlewares/auth.middleware.js";
 import {
   commentAnalytics,
   CommentOnSong,
@@ -9,8 +9,8 @@ import {
   nukeComment,
   replyToComment,
   unlikeComment,
-} from "../controllers/comment.controller.js";
-import { isSongOwner } from "../middlewares/isSongOwner.middleware.js";
+} from "../../controllers/v1/comment.controller.js";
+import { isSongOwner } from "../../middlewares/isSongOwner.middleware.js";
 const router = Router();
 router.route("/:songId/comments").get(verifyJWT, getAllComments)
 router.route("/:songId").post(verifyJWT, CommentOnSong);

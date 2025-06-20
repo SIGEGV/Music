@@ -126,6 +126,7 @@ const OPTIONS = {
   httpOnly: true, // always true for security
   secure: ISPRODUCTION, // only true in production (HTTPS)
   sameSite: ISPRODUCTION ? "Strict" : "Lax",
+  path: '/'
 };
 
 const SENTIMENT = new Sentiment();

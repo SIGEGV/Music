@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { verifyJWT } from "../middlewares/auth.middleware.js";
-import { upload } from "../middlewares/multer.middleware.js";
+import { verifyJWT } from "../../middlewares/auth.middleware.js";
+import { upload } from "../../middlewares/multer.middleware.js";
 import {
   deleteSong,
   getSongAndUpdateViews,
@@ -12,8 +12,8 @@ import {
   updateSongDetail,
   updateThumbnail,
   uploadAudio,
-} from "../controllers/song.controller.js";
-import { isSongOwner } from "../middlewares/isSongOwner.middleware.js";
+} from "../../controllers/v1/song.controller.js";
+import { isSongOwner } from "../../middlewares/isSongOwner.middleware.js";
 
 const router = Router();
 

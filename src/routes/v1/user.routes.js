@@ -11,10 +11,10 @@ import {
   updateUserDetail,
   verifyUserOtpAndRegister,
   loginUser,
-} from "../controllers/user.controller.js";
-import { upload } from "../middlewares/multer.middleware.js";
-import { verifyJWT } from "../middlewares/auth.middleware.js";
-import { otpVerifyLimiter } from "../middlewares/rateLimiter.middleware.js";
+} from "../../controllers/v1/user.controller.js";
+import { upload } from "../../middlewares/multer.middleware.js";
+import { verifyJWT } from "../../middlewares/auth.middleware.js";
+import { otpVerifyLimiter } from "../../middlewares/rateLimiter.middleware.js";
 const router = Router();
 
 router.route("/register").post(

@@ -1,10 +1,10 @@
-import { asyncHandler } from "../utils/asyncHandler.js";
-import { apiError } from "../utils/apiError.js";
-import { SONG, LIKE } from "../models/song.model.js";
-import { uploadOnCloudinary } from "../utils/Cloudinary.service.js";
-import { USER } from "../models/user.model.js";
+
+import { apiError } from "../../utils/apiError.js";
+import { SONG, LIKE } from "../../models/song.model.js";
+import { uploadOnCloudinary } from "../../utils/Cloudinary.service.js";
+import { USER } from "../../models/user.model.js";
 import * as mm from "music-metadata";
-import { apiResponse } from "../utils/apiResponse.js";
+import { apiResponse } from "../../utils/apiResponse.js";
 import {
   STATUS_CODE,
   ERROR_MESSAGES,
@@ -12,10 +12,11 @@ import {
   ONE_MONTH_AGO,
   THIRTY_MINUTES,
   FILE_TYPE_CLOUDINARY,
-} from "../controllers/controller.constants.js";
-import { redisClient } from "../utils/redis.js";
+} from "../controller.constants.js";
+import { redisClient } from "../../utils/redis.js";
 
-import { SONG_FIELDS, USER_FIELDS } from "../models/models.constansts.js";
+import { SONG_FIELDS, USER_FIELDS } from "../../models/models.constansts.js";
+import { asyncHandler } from "../../utils/asyncHandler.js";
 
 /**
  * @description Route to upload a song and its thumbnail.

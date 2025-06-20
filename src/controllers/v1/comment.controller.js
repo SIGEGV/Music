@@ -1,14 +1,14 @@
-import { COMMENTS, COMMENTS_LIKE } from "../models/comments.model.js";
-import { apiError } from "../utils/apiError.js";
-import { asyncHandler } from "../utils/asyncHandler.js";
-import { apiResponse } from "../utils/apiResponse.js";
+import { COMMENTS, COMMENTS_LIKE } from "../../models/comments.model.js";
+import { apiError } from "../../utils/apiError.js";
+import { asyncHandler } from "../../utils/asyncHandler.js";
+import { apiResponse } from "../../utils/apiResponse.js";
 import {
   ERROR_MESSAGES,
   RESPONSE_MESSAGES,
   SENTIMENT,
   STATUS_CODE,
-} from "./controller.constants.js";
-import { redisClient } from "../utils/redis.js";
+} from "../controller.constants.js";
+import { redisClient } from "../../utils/redis.js";
 import mongoose from "mongoose";
 /**
  * @description Allows a user to post a comment on a song.
