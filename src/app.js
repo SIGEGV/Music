@@ -47,8 +47,7 @@ import userRouter from "./routes/v1/user.routes.js";
 import songRouter from "./routes/v1/song.routes.js";
 import commentRouter from "./routes/v1/comments.routes.js";
 
-
-                                        /*  UpBeats Version One Api  */
+/*  UpBeats Version One Api  */
 /**
  * @route /api/v1/users
  * @description Routes for user-related operations.

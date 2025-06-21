@@ -28,7 +28,6 @@ export const verifyJWT = asyncHandler(async (req, _, next) => {
     req.header("Authorization")?.replace("Bearer ", "");
 
   if (!token) {
-    console.warn("No token provided in request");
     throw new apiError(
       STATUS_CODES.UNAUTHORIZED,
       ERROR_MESSAGES.UNAUTHORIZED_REQUEST

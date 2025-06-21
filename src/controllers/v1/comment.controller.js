@@ -381,7 +381,7 @@ const commentAnalytics = asyncHandler(async (req, res) => {
 /**
  * @route   GET /api/v1/comments/:songId/comments
  * @desc    Fetch all comments for a given song by its ID
- * @access  Protected 
+ * @access  Protected
  * @param   {Object} req - Express request object
  * @param   {Object} req.params - URL parameters
  * @param   {string} req.params.songId - The ID of the song to fetch comments for
@@ -400,13 +400,15 @@ const getAllComments = asyncHandler(async (req, res) => {
   const Comments = await COMMENTS.find({ song: songId });
   console.log(Comments);
 
-  return res.status(200).json(
-    new apiResponse(
-      STATUS_CODE.SUCCESS,
-      { Comments },
-      RESPONSE_MESSAGES.COMMENTS_FETCHED
-    )
-  );
+  return res
+    .status(200)
+    .json(
+      new apiResponse(
+        STATUS_CODE.SUCCESS,
+        { Comments },
+        RESPONSE_MESSAGES.COMMENTS_FETCHED
+      )
+    );
 });
 export {
   CommentOnSong,
@@ -416,5 +418,5 @@ export {
   deleteComment,
   nukeComment,
   commentAnalytics,
-  getAllComments
+  getAllComments,
 };

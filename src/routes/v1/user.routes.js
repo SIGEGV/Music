@@ -26,7 +26,7 @@ router.route("/register").post(
   ]),
   registerUser
 );
-router.route("/verify-otp").post(otpVerifyLimiter,verifyUserOtpAndRegister);
+router.route("/verify-otp").post(otpVerifyLimiter, verifyUserOtpAndRegister);
 
 router.route("/login").post(loginUser);
 

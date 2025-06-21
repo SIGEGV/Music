@@ -1,4 +1,3 @@
-
 import { apiError } from "../../utils/apiError.js";
 import { SONG, LIKE } from "../../models/song.model.js";
 import { uploadOnCloudinary } from "../../utils/Cloudinary.service.js";
@@ -589,24 +588,22 @@ const getUserSongs = asyncHandler(async (req, res) => {
   }
 
   // Embed artist name inside each song object
-  songs = songs.map(song => {
+  songs = songs.map((song) => {
     // Convert mongoose document to plain object to safely add new field
     const songObj = song.toObject();
     songObj.artist = artistName;
     return songObj;
   });
 
-  return res
-    .status(STATUS_CODE.SUCCESS)
-    .json(
-      new apiResponse(
-        STATUS_CODE.SUCCESS,
-        {
-          songs,
-        },
-        RESPONSE_MESSAGES.SONG_FETCHED
-      )
-    );
+  return res.status(STATUS_CODE.SUCCESS).json(
+    new apiResponse(
+      STATUS_CODE.SUCCESS,
+      {
+        songs,
+      },
+      RESPONSE_MESSAGES.SONG_FETCHED
+    )
+  );
 });
 
 export {

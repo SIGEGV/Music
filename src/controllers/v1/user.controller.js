@@ -198,10 +198,10 @@ const verifyUserOtpAndRegister = asyncHandler(async (req, res) => {
  */
 const loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
-  if (!( email || password)) {
+  if (!(email || password)) {
     throw new apiError(STATUS_CODE.BAD_REQUEST, ERROR_MESSAGES.MISSING_FIELDS);
   }
-  const user = await USER.findOne({email});
+  const user = await USER.findOne({ email });
 
   if (!user) {
     throw new apiError(STATUS_CODE.NOT_FOUND, ERROR_MESSAGES.USER_NOT_FOUND);
@@ -433,7 +433,7 @@ const getCurrentUser = asyncHandler(async (req, res) => {
  * @returns {Error} 400 - Missing fields in the request or no fields provided
  * @returns {Error} 409 - Email or username already in use by another user
  * @returns {Error} 500 - Failed to update user account due to server issues
- * @description Updates the authenticated user's details such as fullname, email, and username. 
+ * @description Updates the authenticated user's details such as fullname, email, and username.
  *              Checks for uniqueness of email and username before updating.
  */
 const updateUserDetail = asyncHandler(async (req, res) => {
@@ -448,8 +448,13 @@ const updateUserDetail = asyncHandler(async (req, res) => {
     // }
 
     if (email) {
-      const existingEmailUser = await USER.findOne({ email: email.toLowerCase() });
-      if (existingEmailUser && existingEmailUser._id.toString() !== req.user._id.toString()) {
+      const existingEmailUser = await USER.findOne({
+        email: email.toLowerCase(),
+      });
+      if (
+        existingEmailUser &&
+        existingEmailUser._id.toString() !== req.user._id.toString()
+      ) {
         return res.status(STATUS_CODE.CONFLICT).json({
           message: "Email already in use by another user.",
         });
@@ -457,8 +462,13 @@ const updateUserDetail = asyncHandler(async (req, res) => {
     }
 
     if (username) {
-      const existingUsernameUser = await USER.findOne({ username: username.toLowerCase() });
-      if (existingUsernameUser && existingUsernameUser._id.toString() !== req.user._id.toString()) {
+      const existingUsernameUser = await USER.findOne({
+        username: username.toLowerCase(),
+      });
+      if (
+        existingUsernameUser &&
+        existingUsernameUser._id.toString() !== req.user._id.toString()
+      ) {
         return res.status(STATUS_CODE.CONFLICT).json({
           message: "Username already in use by another user.",
         });
@@ -476,13 +486,15 @@ const updateUserDetail = asyncHandler(async (req, res) => {
       { new: true }
     ).select(`-${USER_FIELDS.PASSWORD}`);
 
-    return res.status(STATUS_CODE.SUCCESS).json(
-      new apiResponse(
-        STATUS_CODE.SUCCESS,
-        { user: user },
-        RESPONSE_MESSAGES.ACCOUNT_UPDATED
-      )
-    );
+    return res
+      .status(STATUS_CODE.SUCCESS)
+      .json(
+        new apiResponse(
+          STATUS_CODE.SUCCESS,
+          { user: user },
+          RESPONSE_MESSAGES.ACCOUNT_UPDATED
+        )
+      );
   } catch (error) {
     throw new apiError(
       STATUS_CODE.INTERNAL_SERVER_ERROR,
@@ -490,7 +502,6 @@ const updateUserDetail = asyncHandler(async (req, res) => {
     );
   }
 });
-
 
 /**
  * @route PATCH /update-avatar

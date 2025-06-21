@@ -36,7 +36,7 @@ const RESPONSE_MESSAGES = {
   NO_SONG_AVAILABLE: "You Dont have Any Song Uploded",
   // Comments
   COMMENT_UPLOADED: "Comment Updated Successfully",
-  COMMENTS_FETCHED:"Comments fetched Succesfully",
+  COMMENTS_FETCHED: "Comments fetched Succesfully",
   COMMENT_ALREADY_LIKED: "Comment has Already been liked ",
   COMMENT_ALREADY_UNLIKED: "Comment has Already been unliked ",
   COMMENT_LIKED: "Comment liked successfully.",
@@ -63,7 +63,7 @@ const ERROR_MESSAGES = {
   MISSING_OTP: "OTP is Required",
   EMAIL_OR_USERNAME_EXISTS: "Username or Email already exists.",
   INVALID_CREDENTIALS: "Invalid  email.",
-  INVALID_PASSWORD:"Invalid  Password.",
+  INVALID_PASSWORD: "Invalid  Password.",
   UNAUTHORIZED_REQUEST: "Unauthorized request.",
   REFRESH_TOKEN_EXPIRED: "Refresh token is expired or used.",
   SESSION_EXPIRED: "Session expired. Please re-register.",
@@ -93,7 +93,7 @@ const ERROR_MESSAGES = {
   SONG_UNLIKED_FAILED: "Failed to Unlike the Song. Please try again",
   INVALID_SONG_FIELD: "Invalid Song Field",
   FAILED_HOMEPAGE_QUERY: "Failed to fetch songs",
-  SONGID_REQUIRED:"Song Id is Required",
+  SONGID_REQUIRED: "Song Id is Required",
   //Comments
   INVALID_CONTENT: "Content is required",
   INVALID_PARENT_ID: "Enter a valid Parrent Comment Id",
@@ -126,7 +126,7 @@ const OPTIONS = {
   httpOnly: true, // always true for security
   secure: ISPRODUCTION, // only true in production (HTTPS)
   sameSite: ISPRODUCTION ? "Strict" : "Lax",
-  path: '/'
+  path: "/",
 };
 
 const SENTIMENT = new Sentiment();
