@@ -14,7 +14,7 @@ import { redisClient } from "../utils/redis.js";
  * @throws {Error} Throws an error if there is an issue syncing the Redis data to MongoDB.
  */
 
-cron.schedule("1 * * * *", async () => {
+cron.schedule("* * * * *", async () => {
   try {
     const keys = await redisClient.keys("song:*:likedBy");
 

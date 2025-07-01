@@ -3,7 +3,7 @@ const FILE_UPLOAD = {
   MAX_FILE_SIZE: 100 * 1024 * 1024, // 100MB for audio
   MAX_IMAGE_SIZE: 5 * 1024 * 1024, // 5MB for images
   ALLOWED_AUDIO_EXTENSIONS: [".mp3", ".wav", ".flac", ".aac", ".m4a"],
-  ALLOWED_IMAGE_EXTENSIONS: [".jpg", ".jpeg", ".png", ".gif"],
+  ALLOWED_IMAGE_EXTENSIONS: [".jpg", ".jpeg", ".png", ".gif", ".webp"],
 };
 const ERROR_MESSAGES = {
   // Authentication Errors

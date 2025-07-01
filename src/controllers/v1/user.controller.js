@@ -359,6 +359,11 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 const changeCurrentPassword = asyncHandler(async (req, res) => {
   const { oldPassword, newPassword, confirmPassword } = req.body;
   const user = req.user;
+  console.log(oldPassword, newPassword, confirmPassword);
+  console.log(user);
+  if (!oldPassword || !newPassword || !confirmPassword) {
+    throw new apiError(STATUS_CODE.BAD_REQUEST, ERROR_MESSAGES.MISSING_FIELDS);
+  }
 
   try {
     const isPasswordCorrect = await user.isPasswordCorrect(oldPassword);
@@ -368,12 +373,7 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
         ERROR_MESSAGES.INCORRECT_OLD_PASSWORD
       );
     }
-    if (!confirmPassword || !oldPassword || !newPassword) {
-      throw new apiError(
-        ERROR_MESSAGES.BAD_REQUEST,
-        ERROR_MESSAGES.MISSING_FIELDS
-      );
-    }
+
     if (newPassword !== confirmPassword) {
       throw new apiError(
         STATUS_CODE.BAD_REQUEST,
@@ -392,10 +392,7 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
         )
       );
   } catch (error) {
-    throw new apiError(
-      STATUS_CODE.BAD_REQUEST,
-      ERROR_MESSAGES.UNAUTHORIZED_REQUEST
-    );
+    throw new apiError(STATUS_CODE.BAD_REQUEST, error.message);
   }
 });
 
@@ -439,14 +436,6 @@ const getCurrentUser = asyncHandler(async (req, res) => {
 const updateUserDetail = asyncHandler(async (req, res) => {
   try {
     const { fullname, email, username } = req.body;
-
-    // if (!fullname && !email && !username) {
-    //   throw new apiError(
-    //     STATUS_CODE.BAD_REQUEST,
-    //     ERROR_MESSAGES.MISSING_FIELDS
-    //   );
-    // }
-
     if (email) {
       const existingEmailUser = await USER.findOne({
         email: email.toLowerCase(),
@@ -478,7 +467,7 @@ const updateUserDetail = asyncHandler(async (req, res) => {
     const updateFields = {};
     if (fullname) updateFields.fullname = fullname;
     if (email) updateFields.email = email.toLowerCase();
-    if (username) updateFields.username = username.toLowerCase();
+    if (username) updateFields.username = username;
 
     const user = await USER.findByIdAndUpdate(
       req.user._id,
@@ -602,7 +591,7 @@ const getWatchHistory = asyncHandler(async (req, res) => {
   const user = await USER.findById(userId)
     .populate({
       path: USER_FIELDS.WATCH_HISTORY_SONG,
-      select: `${SONG_FIELDS.TITLE} ${SONG_FIELDS.THUMBNAIL} ${SONG_FIELDS.DURATION} ${SONG_FIELDS.OWNER}`,
+      select: `${SONG_FIELDS.TITLE} ${SONG_FIELDS.THUMBNAIL} ${SONG_FIELDS.DURATION} ${SONG_FIELDS.OWNER} ${SONG_FIELDS.SONG_FILE}`,
       populate: {
         path: SONG_FIELDS.OWNER,
         select: `${USER_FIELDS.USERNAME} ${USER_FIELDS.AVATAR}`,

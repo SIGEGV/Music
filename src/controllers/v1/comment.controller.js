@@ -10,6 +10,7 @@ import {
 } from "../controller.constants.js";
 import { redisClient } from "../../utils/redis.js";
 import mongoose from "mongoose";
+import { query } from "express";
 /**
  * @description Allows a user to post a comment on a song.
  * @async
@@ -380,35 +381,78 @@ const commentAnalytics = asyncHandler(async (req, res) => {
 });
 /**
  * @route   GET /api/v1/comments/:songId/comments
- * @desc    Fetch all comments for a given song by its ID
+ * @desc    Fetch paginated top-level comments for a song along with their first-level replies
  * @access  Protected
- * @param   {Object} req - Express request object
- * @param   {Object} req.params - URL parameters
- * @param   {string} req.params.songId - The ID of the song to fetch comments for
- * @param   {Object} res - Express response object
- * @returns {Object} JSON response with status code and list of comments
  *
- * @throws  {apiError} 400 - If songId is missing from request parameters
+ * @param   {Object} req - Express request object
+ * @param   {Object} req.params - Route parameters
+ * @param   {string} req.params.songId - ID of the song to fetch comments for
+ * @param   {Object} req.query - Query parameters for pagination
+ * @param   {string|number} [req.query.page=1] - Page number for pagination
+ * @param   {string|number} [req.query.limit=10] - Number of comments per page
+ *
+ * @param   {Object} res - Express response object
+ *
+ * @returns {Object} JSON response with:
+ *  - `comments`: Array of top-level comments, each with user info and an array of `replies`
+ *  - `pagination`: Object with page, limit, total, and total pages
+ *
+ * @throws  {apiError} 400 - If `songId` is missing from request parameters
  */
+
 const getAllComments = asyncHandler(async (req, res) => {
   const { songId } = req.params;
 
   if (!songId) {
     throw new apiError(STATUS_CODE.BAD_REQUEST, ERROR_MESSAGES.SONGID_REQUIRED);
   }
+  const PAGE = parseInt(req.query.page || 1);
+  const LIMIT = parseInt(req, query.limit || 10);
+  const SKIP = (PAGE - 1) * LIMIT;
+  const topLevelComments = await COMMENTS.find({ song: songId })
+    .populate("user", "_id username avatar")
+    .sort({ createdAt: -1 })
+    .skip(SKIP)
+    .limit(LIMIT)
+    .lean();
+  const topLevelIds = topLevelComments.map((comment) => comment._id);
+  const replies = await COMMENTS.find({
+    parentComment: { $in: topLevelIds },
+  })
+    .populate("user", "_id username avatar")
+    .lean();
+  const repliesMap = new Map();
+  replies.forEach((reply) => {
+    const parentId = String(reply.parentComment);
+    if (!repliesMap.has(parentId)) {
+      repliesMap.set(parentId, []);
+    }
+    repliesMap.get(parentId).push(reply);
+  });
+  const nestedComments = topLevelComments.map((comment) => ({
+    ...comment,
+    replies: repliesMap.get(String(comment._id)) || [],
+  }));
 
-  const Comments = await COMMENTS.find({ song: songId });
-  console.log(Comments);
-
-  return res
-    .status(200)
-    .json(
-      new apiResponse(
-        STATUS_CODE.SUCCESS,
-        { Comments },
-        RESPONSE_MESSAGES.COMMENTS_FETCHED
-      )
-    );
+  const total = await COMMENTS.countDocuments({
+    song: songId,
+    parentComment: null,
+  });
+  return res.status(200).json(
+    new apiResponse(
+      STATUS_CODE.SUCCESS,
+      {
+        comments: nestedComments,
+        pagination: {
+          PAGE,
+          LIMIT,
+          total,
+          pages: Math.ceil(total / LIMIT),
+        },
+      },
+      RESPONSE_MESSAGES.COMMENTS_FETCHED
+    )
+  );
 });
 export {
   CommentOnSong,

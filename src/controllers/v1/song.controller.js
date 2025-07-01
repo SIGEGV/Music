@@ -1,7 +1,7 @@
 import { apiError } from "../../utils/apiError.js";
 import { SONG, LIKE } from "../../models/song.model.js";
 import { uploadOnCloudinary } from "../../utils/Cloudinary.service.js";
-import { USER } from "../../models/user.model.js";
+import { USER, UserLikedSongs } from "../../models/user.model.js";
 import * as mm from "music-metadata";
 import { apiResponse } from "../../utils/apiResponse.js";
 import {
@@ -12,9 +12,13 @@ import {
   THIRTY_MINUTES,
   FILE_TYPE_CLOUDINARY,
 } from "../controller.constants.js";
+import mongoose from "mongoose";
 import { redisClient } from "../../utils/redis.js";
-
-import { SONG_FIELDS, USER_FIELDS } from "../../models/models.constansts.js";
+import {
+  SONG_FIELDS,
+  USER_FIELDS,
+  LIKED_HISTORY,
+} from "../../models/models.constansts.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
 
 /**
@@ -98,7 +102,7 @@ const uploadAudio = asyncHandler(async (req, res) => {
     .json(
       new apiResponse(
         STATUS_CODE.SUCCESS,
-        songUploaded,
+        { songUploaded },
         RESPONSE_MESSAGES.SONG_UPLOADED
       )
     );
@@ -119,15 +123,15 @@ const uploadAudio = asyncHandler(async (req, res) => {
  * GET /search?q=love
  */
 const searchSong = asyncHandler(async (req, res) => {
-  const { query } = req.query;
-  if (!query || query.trim() === "") {
+  const { q } = req.query;
+  if (!q || q.trim() === "") {
     throw new apiError(
       STATUS_CODE.BAD_REQUEST,
       ERROR_MESSAGES.INVALID_SEARCH_QUERY
     );
   }
   const songs = await SONG.find({
-    title: { $regex: query, $options: "i" },
+    title: { $regex: q, $options: "i" },
   }).populate(
     `${SONG_FIELDS.OWNER}`,
     `${USER_FIELDS.USERNAME} ${USER_FIELDS.FULLNAME} ${USER_FIELDS.AVATAR}`
@@ -140,7 +144,7 @@ const searchSong = asyncHandler(async (req, res) => {
     .json(
       new apiResponse(
         STATUS_CODE.SUCCESS,
-        songs,
+        { songs },
         RESPONSE_MESSAGES.SONG_FETCHED
       )
     );
@@ -188,7 +192,7 @@ const updateSongDetail = asyncHandler(async (req, res) => {
     .json(
       new apiResponse(
         STATUS_CODE.SUCCESS,
-        updatedSong,
+        { updatedSong },
         RESPONSE_MESSAGES.SONG_UPDATE_SUCCESFULLY
       )
     );
@@ -317,18 +321,11 @@ const likeSong = asyncHandler(async (req, res) => {
         await redisClient.sAdd(redisSetKey, userIds);
       }
     }
-    const songLiked = await redisClient.sAdd(redisSetKey, userId);
-    if (!songLiked) {
-      return res
-        .status(STATUS_CODE.SUCCESS)
-        .json(
-          new apiResponse(
-            STATUS_CODE.SUCCESS,
-            {},
-            RESPONSE_MESSAGES.SONG_ALREADY_LIKED
-          )
-        );
-    }
+    await UserLikedSongs.findOneAndUpdate(
+      { userId: req.user._id },
+      { $addToSet: { likedSongs: songId } },
+      { upsert: true, new: true }
+    );
     return res
       .status(STATUS_CODE.SUCCESS)
       .json(
@@ -361,6 +358,7 @@ const unlikeSong = asyncHandler(async (req, res) => {
     const userId = req.user._id.toString();
     const songKey = `song:${songId}`;
     const redisSetKey = `${songKey}:likedBy`;
+
     const songIdExist = await SONG.findById(songId);
     if (!songIdExist) {
       throw new apiError(
@@ -368,6 +366,7 @@ const unlikeSong = asyncHandler(async (req, res) => {
         ERROR_MESSAGES.COMMENT_NOT_FOUND
       );
     }
+
     const keyExist = await redisClient.exists(redisSetKey);
     if (!keyExist) {
       const likeDetail = await LIKE.findOne({ songId });
@@ -376,18 +375,12 @@ const unlikeSong = asyncHandler(async (req, res) => {
         await redisClient.sAdd(redisSetKey, userIds);
       }
     }
-    const songUnliked = await redisClient.sRem(redisSetKey, userId);
-    if (!songUnliked) {
-      return res
-        .status(STATUS_CODE.SUCCESS)
-        .json(
-          new apiResponse(
-            STATUS_CODE.SUCCESS,
-            {},
-            RESPONSE_MESSAGES.SONG_ALREADY_UNLIKED
-          )
-        );
-    }
+    const userObjectId = new mongoose.Types.ObjectId(userId);
+    await UserLikedSongs.findOneAndUpdate(
+      { userId: userObjectId },
+      { $pull: { likedSongs: songId } }
+    );
+
     return res
       .status(STATUS_CODE.SUCCESS)
       .json(
@@ -459,7 +452,7 @@ const getSongAndUpdateViews = asyncHandler(async (req, res) => {
       .json(
         new apiResponse(
           STATUS_CODE.SUCCESS,
-          { song },
+          { views: song.views },
           RESPONSE_MESSAGES.SONG_VIEW_NOT_COUNTED
         )
       );
@@ -475,7 +468,7 @@ const getSongAndUpdateViews = asyncHandler(async (req, res) => {
     .json(
       new apiResponse(
         STATUS_CODE.SUCCESS,
-        { song },
+        { views: song.views },
         RESPONSE_MESSAGES.SONG_VIEW_COUNTED
       )
     );
@@ -521,7 +514,7 @@ const homepageSongs = asyncHandler(async (req, res) => {
     const result = await SONG.aggregatePaginate(aggregateQuery, option);
 
     // Ensure the response contains the full name and username
-    const songsWithOwnerDetails = result.docs.map((song) => ({
+    const songs = result.docs.map((song) => ({
       ...song,
       owner: song.ownerDetails ? `${song.ownerDetails.username}` : "Unknown",
     }));
@@ -529,11 +522,7 @@ const homepageSongs = asyncHandler(async (req, res) => {
     res
       .status(200)
       .json(
-        new apiResponse(
-          STATUS_CODE.SUCCESS,
-          songsWithOwnerDetails,
-          RESPONSE_MESSAGES.SUCCESS
-        )
+        new apiResponse(STATUS_CODE.SUCCESS, songs, RESPONSE_MESSAGES.SUCCESS)
       );
   } catch (err) {
     console.error("Error fetching songs with pagination:", err);
@@ -574,7 +563,6 @@ const getUserSongs = asyncHandler(async (req, res) => {
   }
 
   let songs = await SONG.find({ owner: userId });
-
   if (!songs.length) {
     return res
       .status(STATUS_CODE.SUCCESS)
@@ -591,21 +579,85 @@ const getUserSongs = asyncHandler(async (req, res) => {
   songs = songs.map((song) => {
     // Convert mongoose document to plain object to safely add new field
     const songObj = song.toObject();
-    songObj.artist = artistName;
+    songObj.owner = artistName;
     return songObj;
   });
 
-  return res.status(STATUS_CODE.SUCCESS).json(
-    new apiResponse(
-      STATUS_CODE.SUCCESS,
-      {
-        songs,
-      },
-      RESPONSE_MESSAGES.SONG_FETCHED
-    )
-  );
+  return res
+    .status(STATUS_CODE.SUCCESS)
+    .json(
+      new apiResponse(
+        STATUS_CODE.SUCCESS,
+        { songs },
+        RESPONSE_MESSAGES.SONG_FETCHED
+      )
+    );
 });
-
+/**
+ * @function getLikedSongs
+ * @description Fetches the list of songs liked by the authenticated user.
+ * It retrieves the `UserLikedSongs` document by user ID, populates the liked songs with selected fields,
+ * and also populates each song's owner with their fullname and avatar.
+ *
+ * @route GET /api/v1/likedSongs
+ * @access Private (requires authentication)
+ *
+ * @param {Object} req - Express request object
+ * @param {Object} req.user - The authenticated user (attached via middleware)
+ * @param {Object} res - Express response object
+ *
+ * @returns {Object} 200 - Success response containing liked songs or empty response if none found
+ * @throws {apiError} 401 - If the user is not authorized or userId is missing
+ */
+const getLikedSongs = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+  if (!userId || userId === "") {
+    throw new apiError(
+      STATUS_CODE.UNAUTHORIZED,
+      ERROR_MESSAGES.UNAUTHORIZED_REQUEST
+    );
+  }
+  const songs = await UserLikedSongs.findOne({
+    [LIKED_HISTORY.USER_ID]: userId,
+  }).populate({
+    path: LIKED_HISTORY.LIKED_SONGS, // "likedSongs"
+    select: [
+      SONG_FIELDS.SONG_FILE,
+      SONG_FIELDS.TITLE,
+      SONG_FIELDS.THUMBNAIL,
+      SONG_FIELDS.DESCRIPTION,
+      SONG_FIELDS.DURATION,
+      SONG_FIELDS.VIEWS,
+      SONG_FIELDS.COMMENT_COUNT,
+      SONG_FIELDS.LIKE_COUNT,
+      SONG_FIELDS.OWNER,
+    ].join(" "),
+    populate: {
+      path: SONG_FIELDS.OWNER, // "owner"
+      select: [USER_FIELDS.FULLNAME, USER_FIELDS.AVATAR].join(" "),
+    },
+  });
+  if (!songs) {
+    return res
+      .status(STATUS_CODE.SUCCESS)
+      .json(
+        new apiResponse(
+          STATUS_CODE.SUCCESS,
+          {},
+          RESPONSE_MESSAGES.NO_LIKED_SONGS
+        )
+      );
+  }
+  return res
+    .status(STATUS_CODE.SUCCESS)
+    .json(
+      new apiResponse(
+        STATUS_CODE.SUCCESS,
+        { songs },
+        RESPONSE_MESSAGES.LIKED_SONGS_FOUND
+      )
+    );
+});
 export {
   uploadAudio,
   searchSong,
@@ -617,4 +669,5 @@ export {
   getSongAndUpdateViews,
   homepageSongs,
   getUserSongs,
+  getLikedSongs,
 };

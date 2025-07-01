@@ -34,6 +34,8 @@ const RESPONSE_MESSAGES = {
   SONG_ALREADY_UNLIKED: "Song is already unliked.",
   THUMBNAIL_UPDATED: "Thumbnail updated successfully.",
   NO_SONG_AVAILABLE: "You Dont have Any Song Uploded",
+  NO_LIKED_SONGS: "You Dont Have Any Liked Songs",
+  LIKED_SONGS_FOUND: "Liked Songs fetched Successfully",
   // Comments
   COMMENT_UPLOADED: "Comment Updated Successfully",
   COMMENTS_FETCHED: "Comments fetched Succesfully",
@@ -94,6 +96,8 @@ const ERROR_MESSAGES = {
   INVALID_SONG_FIELD: "Invalid Song Field",
   FAILED_HOMEPAGE_QUERY: "Failed to fetch songs",
   SONGID_REQUIRED: "Song Id is Required",
+  UNABLE_TO_LIKE_SONG: "Unable to Like Song",
+  UNABLE_TO_UNLIKE_SONG: "Unable to Unlike Song",
   //Comments
   INVALID_CONTENT: "Content is required",
   INVALID_PARENT_ID: "Enter a valid Parrent Comment Id",

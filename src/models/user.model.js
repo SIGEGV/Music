@@ -6,12 +6,35 @@ import mongoose, { Schema } from "mongoose";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import { SCHEMA_NAMES, USER_FIELDS } from "./models.constansts.js";
+
+/**
+ * @constant USER_LIKED_SONGS_SCHEMA
+ * @type {Schema}
+ * @description Stores the liked songs of a particular user
+ */
+const USER_LIKED_SONGS_SCHEMA = new Schema(
+  {
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: SCHEMA_NAMES.USER,
+      required: true,
+      unique: true,
+    },
+    likedSongs: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: SCHEMA_NAMES.SONG,
+      },
+    ],
+  },
+  { timestamps: true }
+);
 /**
  * @constant USER_SCHEMA
  * @type {Schema}
  * @description Stores user data including credentials, profile, and watch history.
  */
-const USER_SCEHEMA = new Schema(
+const USER_SCHEMA = new Schema(
   {
     username: {
       type: String,
@@ -64,7 +87,7 @@ const USER_SCEHEMA = new Schema(
 /**
  * Middleware to hash password before saving user document.
  */
-USER_SCEHEMA.pre("save", async function (next) {
+USER_SCHEMA.pre("save", async function (next) {
   if (!this.isModified(USER_FIELDS.PASSWORD)) return next();
   this.password = await bcrypt.hash(this.password, 10);
   next();
@@ -75,7 +98,7 @@ USER_SCEHEMA.pre("save", async function (next) {
  * @param {string} password - Plain password to verify.
  * @returns {Promise<boolean>}
  */
-USER_SCEHEMA.methods.isPasswordCorrect = async function (password) {
+USER_SCHEMA.methods.isPasswordCorrect = async function (password) {
   return await bcrypt.compare(password, this.password);
 };
 
@@ -84,7 +107,7 @@ USER_SCEHEMA.methods.isPasswordCorrect = async function (password) {
  * @returns {Promise<string>}
  */
 
-USER_SCEHEMA.methods.generateAccessToken = async function () {
+USER_SCHEMA.methods.generateAccessToken = async function () {
   return jwt.sign(
     {
       _id: this._id,
@@ -104,7 +127,7 @@ USER_SCEHEMA.methods.generateAccessToken = async function () {
  * @returns {Promise<string>}
  */
 
-USER_SCEHEMA.methods.generateRefreshToken = async function () {
+USER_SCHEMA.methods.generateRefreshToken = async function () {
   return jwt.sign(
     {
       _id: this._id,
@@ -116,4 +139,8 @@ USER_SCEHEMA.methods.generateRefreshToken = async function () {
   );
 };
 
-export const USER = mongoose.model(SCHEMA_NAMES.USER, USER_SCEHEMA);
+export const USER = mongoose.model(SCHEMA_NAMES.USER, USER_SCHEMA);
+export const UserLikedSongs = mongoose.model(
+  SCHEMA_NAMES.LIKED_HISTORY,
+  USER_LIKED_SONGS_SCHEMA
+);

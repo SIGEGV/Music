@@ -12,6 +12,7 @@ import {
   updateSongDetail,
   updateThumbnail,
   uploadAudio,
+  getLikedSongs,
 } from "../../controllers/v1/song.controller.js";
 import { isSongOwner } from "../../middlewares/isSongOwner.middleware.js";
 
@@ -53,4 +54,5 @@ router.route("/:songId/unlike").post(verifyJWT, unlikeSong);
 router.route("/:songId").post(verifyJWT, getSongAndUpdateViews);
 router.route("/home").get(verifyJWT, homepageSongs);
 router.route("/userSongs").get(verifyJWT, getUserSongs);
+router.route("/likedSongs").get(verifyJWT, getLikedSongs);
 export default router;
