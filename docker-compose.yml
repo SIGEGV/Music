@@ -1,0 +1,21 @@
+version: "3.8"
+
+services:
+  backend:
+    build: .
+    container_name: music-backend
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    depends_on:
+      - redis
+    dns:
+      - 8.8.8.8
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+
+    restart: always

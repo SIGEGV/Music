@@ -6,7 +6,7 @@
   "main": "index.js",
   "scripts": {
     "test": "jest --config ./jest.config.mjs",
-    "dev": "fuser -k 8080/tcp || true && nodemon -r dotenv/config --experimental-json-modules src/index.js",
+    "dev": "nodemon -r dotenv/config --experimental-json-modules src/index.js",
     "migrate:likes": "node SCRIPTS/migrateLikes.js"
   },
   "keywords": [
