@@ -28,6 +28,14 @@ const LIKED_HISTORY = {
   LIKED_SONGS: "likedSongs",
   USER_ID: "userId",
 };
+const PLAYLIST = {
+  PLAYLIST_NAME: "playlist_name",
+  DESCRIPTIONS: "description",
+  IS_PUBLIC: "isPublic",
+  OWNER: "owner",
+  THUMBNAIL: "thumbnail",
+  SONGS: "songs",
+};
 const SCHEMA_NAMES = {
   COMMENTS: "Comments",
   COMMENTS_LIKE: "Comments_Like",
@@ -37,6 +45,7 @@ const SCHEMA_NAMES = {
   OTP: "Otp",
   TEMP_USER: "TempUser",
   LIKED_HISTORY: "USER_LIKED_SONGS",
+  PLAYLIST: "PLAYLIST",
 };
 
-export { USER_FIELDS, SONG_FIELDS, SCHEMA_NAMES, LIKED_HISTORY };
+export { USER_FIELDS, SONG_FIELDS, SCHEMA_NAMES, LIKED_HISTORY, PLAYLIST };

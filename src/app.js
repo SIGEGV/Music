@@ -46,7 +46,7 @@ app.use(cookieParser());
 import userRouter from "./routes/v1/user.routes.js";
 import songRouter from "./routes/v1/song.routes.js";
 import commentRouter from "./routes/v1/comments.routes.js";
-
+import playlistRouter from "./routes/v1/playlist.routes.js";
 /*  UpBeats Version One Api  */
 /**
  * @route /api/v1/users
@@ -65,5 +65,10 @@ app.use("/api/v1/songs", songRouter);
  * @description Routes for comment-related operations.
  */
 app.use("/api/v1/comments", commentRouter);
+/**
+ * @route /api/v1/playlist
+ * @description Route for Playlist-related operations
+ */
+app.use("/api/v1/playlist", playlistRouter);
 
 export { app };

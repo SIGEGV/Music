@@ -527,7 +527,7 @@ const homepageSongs = asyncHandler(async (req, res) => {
   } catch (err) {
     console.error("Error fetching songs with pagination:", err);
     res
-      .status(500)
+      .status(STATUS_CODE.INTERNAL_SERVER_ERROR)
       .json(
         new apiError(
           STATUS_CODE.INTERNAL_SERVER_ERROR,

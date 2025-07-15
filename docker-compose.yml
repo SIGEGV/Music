@@ -12,10 +12,13 @@ services:
       - redis
     dns:
       - 8.8.8.8
-
+    volumes:
+      - .:/app
+      - /app/node_modules
+    command: npm run dev
   redis:
     image: redis:7
+    container_name: music-redis
     ports:
       - "6379:6379"
-
     restart: always

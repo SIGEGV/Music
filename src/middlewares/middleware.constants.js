@@ -17,6 +17,10 @@ const ERROR_MESSAGES = {
   INVALID_FILE_TYPE: "INVALID_FILE_TYPE",
   UNSUPPORTED_FILE_TYPE:
     "Invalid file type. Only audio and image files are allowed!",
+  NO_PLAYLIST_ID: "Enter a valid Playlist Id",
+  NOT_AUTHORISED:
+    "You Can Not Update This Playlist. This Playlist is not Public ",
+  PLAYLIST_NOT_FOUND: "No Playlist Found",
 };
 
 const STATUS_CODES = {

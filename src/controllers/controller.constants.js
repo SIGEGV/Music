@@ -44,6 +44,11 @@ const RESPONSE_MESSAGES = {
   COMMENT_LIKED: "Comment liked successfully.",
   COMMENT_UNLIKED: "Comment unliked successfully.",
   COMMENTS_DELETED_SUCCESSFULLY: "Comment and its replies deleted successfully",
+  // Playlist
+  PLAYLIST_CREATED_SUCCESFULLY: "Succesfully Created PLaylist. Enjoy",
+  PLAYLIST_FETCHED: "Successfully fetched the playlist",
+  PLAYLIST_UPDATED_SUCCESFULLY: "Succesfully Updated Playlist",
+  SONG_ADDED_TO_PLAYLIST: "succesfully added songs to playlist",
   // Views & Analytics
   SONG_VIEW_NOT_COUNTED: "Fetched song, but view was recently counted.",
   SONG_VIEW_COUNTED: "Fetched song and view was counted.",
@@ -107,6 +112,12 @@ const ERROR_MESSAGES = {
   COMMENT_UNLIKE_FAILED: "Failed to Unlike the Comment. Please try again",
   COMMENTS_DELETION_FAILED: "Failed to Delete the Comment. Please try again",
   COMMENT_NOT_FOUND: "Comment not found",
+  //Playlist
+  INVALID_PLAYLIST_NAME: "Playlist Name is Required",
+  FAILED_PLAYLIST_CREATION: "Failed to Create Playlist",
+  INVALID_PLAYLIST_ID: "ENTER A VALID PLAYLIST ID",
+  PLAYLIST_NOT_FOUND: "This Playlist Doesn't Not Playlist Exist",
+  NO_FIELDS_GIVEN: "Atleast One Field is Required",
   // General Errors
   UPLOAD_THUMBNAIL_REQUIRED: "Upload the thumbnail file.",
   PERMISSION_DENIED: "You do not have permission to perform this action.",
