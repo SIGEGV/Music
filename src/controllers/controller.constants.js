@@ -103,6 +103,7 @@ const ERROR_MESSAGES = {
   SONGID_REQUIRED: "Song Id is Required",
   UNABLE_TO_LIKE_SONG: "Unable to Like Song",
   UNABLE_TO_UNLIKE_SONG: "Unable to Unlike Song",
+  INVALID_SONG_ID: "Invalid Song Id",
   //Comments
   INVALID_CONTENT: "Content is required",
   INVALID_PARENT_ID: "Enter a valid Parrent Comment Id",

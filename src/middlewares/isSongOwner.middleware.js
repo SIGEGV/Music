@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import { COMMENTS } from "../models/comments.model.js";
 import { SONG } from "../models/song.model.js";
 import { apiError } from "../utils/apiError.js";
@@ -6,7 +7,7 @@ import { ERROR_MESSAGES, STATUS_CODES } from "./middleware.constants.js";
 export const isSongOwner = asyncHandler(async (req, _, next) => {
   try {
     const currentUserId = req.user._id;
-    let { songId } = req.params;
+    let songId = req.params.songId || req.body.songId;
     if (!songId && req.params.commentId) {
       const comment = await COMMENTS.findById(req.params.commentId);
       if (!comment) {
@@ -22,6 +23,12 @@ export const isSongOwner = asyncHandler(async (req, _, next) => {
         STATUS_CODES.BAD_REQUEST,
         ERROR_MESSAGES.SONG_ID_REQUIRED
       );
+    }
+    if (typeof songId === "string") {
+      if (!mongoose.Types.ObjectId.isValid(songId)) {
+        throw new apiError(STATUS_CODES.BAD_REQUEST, "Invalid songId format");
+      }
+      songId = new mongoose.Types.ObjectId(songId);
     }
     const song = await SONG.findById(songId);
     if (!song) {

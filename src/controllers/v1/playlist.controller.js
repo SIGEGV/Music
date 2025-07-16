@@ -115,7 +115,7 @@ const getPlaylist = asyncHandler(async (req, res) => {
       ERROR_MESSAGES.UNAUTHORIZED_REQUEST
     );
   }
-  const playlist = await Playlist.findOne({ owner: userId })
+  const playlist = await Playlist.find({ owner: userId })
     .populate({
       path: PLAYLIST.OWNER,
       select: USER_FIELDS.USERNAME,

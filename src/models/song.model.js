@@ -101,6 +101,9 @@ const SONG_SCHEMA = new Schema(
         },
       },
     ],
+    genre: {
+      type: String,
+    },
   },
   { timestamps: true }
 );
