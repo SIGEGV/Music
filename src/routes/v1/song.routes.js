@@ -37,7 +37,7 @@ router.route("/search").get(verifyJWT, searchSong);
 router
   .route("/updateSong/:songId")
   .patch(verifyJWT, isSongOwner, updateSongDetail);
-router.route("/delete/:songId").delete(verifyJWT, isSongOwner, deleteSong);
+router.route("/delete").delete(verifyJWT, isSongOwner, deleteSong);
 router.route("/:songId/thumbnail").patch(
   verifyJWT,
   isSongOwner,

@@ -37,7 +37,7 @@ import { asyncHandler } from "../../utils/asyncHandler.js";
  * POST /upload
  */
 const uploadAudio = asyncHandler(async (req, res) => {
-  const { title, description } = req.body;
+  const { title, description, Genre } = req.body;
   if ([title, description].some((fields) => fields?.trim() === "")) {
     throw new apiError(STATUS_CODE.BAD_REQUEST, ERROR_MESSAGES.MISSING_FIELDS);
   }
@@ -50,7 +50,6 @@ const uploadAudio = asyncHandler(async (req, res) => {
   }
   const audioMetaData = await mm.parseFile(audioFileLocalPath);
   const duration = Math.round(audioMetaData?.format.duration);
-
   const audioPath = await uploadOnCloudinary(
     audioFileLocalPath,
     FILE_TYPE_CLOUDINARY.AUDIO
@@ -85,6 +84,7 @@ const uploadAudio = asyncHandler(async (req, res) => {
     description: description,
     duration: duration,
     owner: userId,
+    genre: Genre,
   });
   const songUploaded = await SONG.findById(song._id).populate(
     SONG_FIELDS.OWNER,
@@ -215,13 +215,18 @@ const updateSongDetail = asyncHandler(async (req, res) => {
  * DELETE /delete/12345
  */
 const deleteSong = asyncHandler(async (req, res) => {
-  const { songId } = req.params;
+  let { songId } = req.body;
+  songId = new mongoose.Types.ObjectId(songId);
+  if (!songId || !mongoose.Types.ObjectId.isValid(songId)) {
+    throw new apiError(STATUS_CODE.BAD_REQUEST, ERROR_MESSAGES.INVALID_SONG_ID);
+  }
+
   const song = await SONG.findById(songId);
 
   if (!song) {
     throw new apiError(STATUS_CODE.NOT_FOUND, ERROR_MESSAGES.SONG_NOT_FOUND);
   }
-  song.deleteOne();
+  await song.deleteOne();
   return res
     .status(STATUS_CODE.SUCCESS)
     .json(
