@@ -3,13 +3,21 @@ import { USER } from "../models/user.model.js";
 import { apiError } from "../utils/apiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ERROR_MESSAGES, STATUS_CODES } from "./middleware.constants.js";
-export const isPlaylistOwner = asyncHandler(async (req, res, next) => {
+import mongoose from "mongoose";
+export const isPlaylistOwner = asyncHandler(async (req, _, next) => {
   const userId = req.user._id;
-  const { playlistId } = req.params;
+  let playlistId = req.params.playlistId || req.body.playlistId;
   if (!userId || userId === "") {
     throw new apiError(
       STATUS_CODES.UNAUTHORIZED,
       ERROR_MESSAGES.UNAUTHORIZED_REQUEST
+    );
+  }
+  playlistId = new mongoose.Types.ObjectId(playlistId);
+  if (!playlistId || !mongoose.Types.ObjectId.isValid(playlistId)) {
+    throw new apiError(
+      STATUS_CODES.BAD_REQUEST,
+      ERROR_MESSAGES.INVALID_PLAYLIST_ID
     );
   }
   if (!playlistId || playlistId === "") {

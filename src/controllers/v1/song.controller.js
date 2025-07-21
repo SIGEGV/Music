@@ -18,9 +18,10 @@ import {
   SONG_FIELDS,
   USER_FIELDS,
   LIKED_HISTORY,
+  PLAYLIST_FIELDS,
 } from "../../models/models.constansts.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
-
+import { Playlist } from "../../models/playlist.model.js";
 /**
  * @description Route to upload a song and its thumbnail.
  * This route handles multipart file uploads for song files and thumbnail images.
@@ -122,7 +123,7 @@ const uploadAudio = asyncHandler(async (req, res) => {
  * @example
  * GET /search?q=love
  */
-const searchSong = asyncHandler(async (req, res) => {
+const search = asyncHandler(async (req, res) => {
   const { q } = req.query;
   if (!q || q.trim() === "") {
     throw new apiError(
@@ -136,15 +137,21 @@ const searchSong = asyncHandler(async (req, res) => {
     `${SONG_FIELDS.OWNER}`,
     `${USER_FIELDS.USERNAME} ${USER_FIELDS.FULLNAME} ${USER_FIELDS.AVATAR}`
   );
-  if (!songs.length) {
-    throw new apiError(STATUS_CODE.NOT_FOUND, ERROR_MESSAGES.SONG_NOT_FOUND);
-  }
+  const users = await USER.find({
+    username: { $regex: q, $options: "i" },
+  }).select(`${USER_FIELDS.USERNAME}  ${USER_FIELDS.AVATAR} ${USER_FIELDS.ID}`);
+
+  const playlist = await Playlist.find({
+    playlist_name: { $regex: q, $options: "i" },
+  }).select(
+    `${PLAYLIST_FIELDS.PLAYLIST_NAME} ${PLAYLIST_FIELDS.ID} ${PLAYLIST_FIELDS.THUMBNAIL}`
+  );
   return res
     .status(STATUS_CODE.SUCCESS)
     .json(
       new apiResponse(
         STATUS_CODE.SUCCESS,
-        { songs },
+        { songs, users, playlist },
         RESPONSE_MESSAGES.SONG_FETCHED
       )
     );
@@ -665,7 +672,7 @@ const getLikedSongs = asyncHandler(async (req, res) => {
 });
 export {
   uploadAudio,
-  searchSong,
+  search,
   updateSongDetail,
   deleteSong,
   updateThumbnail,

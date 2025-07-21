@@ -10,9 +10,11 @@ import {
 import { uploadOnCloudinary } from "../../utils/Cloudinary.service.js";
 import {
   PLAYLIST,
+  PLAYLIST_FIELDS,
   SONG_FIELDS,
   USER_FIELDS,
 } from "../../models/models.constansts.js";
+import mongoose from "mongoose";
 /**
  * @function createPlaylist
  * @description Controller to create a new playlist for the authenticated user.
@@ -286,7 +288,7 @@ const updatePlaylistDetails = asyncHandler(async (req, res) => {
     }
   }
   const updateFields = {};
-  if (thumbnailPath) updateFields.thumbnail = thumbnailPath;
+  if (thumbnailPath) updateFields.thumbnail = thumbnailPath.url;
   if (playlist_name) updateFields.playlist_name = playlist_name.trim();
   if (description) updateFields.description = description;
   if (typeof isPublic === "boolean") updateFields.isPublic = isPublic;
@@ -307,7 +309,20 @@ const updatePlaylistDetails = asyncHandler(async (req, res) => {
       )
     );
 });
-
+/**
+ * @function getPublicPlaylist
+ * @description Fetches all public playlists along with song and owner details.
+ * @route GET /api/v1/playlists/public
+ * @access Private (Requires authentication)
+ *
+ * @param {Object} req - Express request object
+ * @param {Object} req.user - The authenticated user object
+ * @param {Object} res - Express response object
+ *
+ * @throws {apiError} If user is not authenticated
+ *
+ * @returns {apiResponse} 200 OK with list of public playlists
+ */
 const getPublicPlaylist = asyncHandler(async (req, res) => {
   const userId = req.user._id;
   if (!userId || userId === "") {
@@ -339,6 +354,110 @@ const getPublicPlaylist = asyncHandler(async (req, res) => {
       )
     );
 });
+/**
+ * @function getPlaylistById
+ * @description Fetches a public playlist by its ID with associated songs and owner details.
+ * @route GET /api/v1/playlists/:playlistId
+ * @access Private (Requires authentication)
+ *
+ * @param {Object} req - Express request object
+ * @param {string} req.params.playlistId - The ID of the playlist to fetch
+ * @param {Object} req.body - Request body
+ * @param {string} req.body.userId - The authenticated user ID
+ * @param {Object} res - Express response object
+ *
+ * @throws {apiError} If user is not authenticated
+ * @throws {apiError} If playlistId is invalid or not found
+ *
+ * @returns {apiResponse} 200 OK with playlist data
+ */
+const getPlaylistById = asyncHandler(async (req, res) => {
+  const { userId } = req.body;
+  if (!userId || userId === "") {
+    throw new apiError(
+      STATUS_CODE.UNAUTHORIZED,
+      ERROR_MESSAGES.UNAUTHORIZED_REQUEST
+    );
+  }
+  const { playlistId } = req.params;
+  if (!playlistId || playlistId === "") {
+    throw new apiError(
+      STATUS_CODE.BAD_REQUEST,
+      ERROR_MESSAGES.INVALID_PLAYLIST_ID
+    );
+  }
+  const playlist = await Playlist.findOne({
+    _id: playlistId,
+    isPublic: true,
+  })
+    .select(
+      `${PLAYLIST_FIELDS.PLAYLIST_NAME} ${PLAYLIST_FIELDS.DESCRIPTION} ${PLAYLIST_FIELDS.THUMBNAIL} ${PLAYLIST_FIELDS.SONGS} ${PLAYLIST_FIELDS.OWNER}`
+    )
+    .populate({
+      path: PLAYLIST_FIELDS.SONGS,
+      select: `${SONG_FIELDS.TITLE} ${SONG_FIELDS.THUMBNAIL} ${SONG_FIELDS.SONG_FILE}`,
+    })
+    .populate({
+      path: PLAYLIST_FIELDS.OWNER,
+      select: `${USER_FIELDS.USERNAME} ${USER_FIELDS.FULLNAME} ${USER_FIELDS.AVATAR}`,
+    });
+
+  if (!playlist) {
+    throw new apiError(
+      STATUS_CODE.NOT_FOUND,
+      ERROR_MESSAGES.PLAYLIST_NOT_FOUND
+    );
+  }
+  res
+    .status(STATUS_CODE.SUCCESS)
+    .json(
+      new apiResponse(
+        STATUS_CODE.SUCCESS,
+        { playlist },
+        RESPONSE_MESSAGES.PLAYLIST_FETCHED
+      )
+    );
+});
+/**
+ * @function deletePlaylist
+ * @description Deletes a playlist by its ID if it exists.
+ * @route DELETE /api/v1/playlists
+ * @access Private (Requires authentication)
+ *
+ * @param {Object} req - Express request object
+ * @param {string} req.body.playlistId - The ID of the playlist to delete
+ * @param {Object} res - Express response object
+ *
+ * @throws {apiError} If playlistId is missing or invalid
+ * @throws {apiError} If playlist does not exist
+ *
+ * @returns {apiResponse} 200 OK with success message
+ */
+const deletePlaylist = asyncHandler(async (req, res) => {
+  let { playlistId } = req.body;
+  playlistId = new mongoose.Types.ObjectId(playlistId);
+  if (!playlistId || !mongoose.Types.ObjectId.isValid(playlistId)) {
+    throw new apiError(
+      STATUS_CODE.BAD_REQUEST,
+      ERROR_MESSAGES.INVALID_PLAYLIST_ID
+    );
+  }
+  const playlist = await Playlist.findByIdAndUpdate(playlistId);
+  if (!playlist) {
+    throw new apiError(
+      STATUS_CODE.NOT_FOUND,
+      ERROR_MESSAGES.PLAYLIST_NOT_FOUND
+    );
+  }
+  await playlist.deleteOne();
+  res
+    .status(STATUS_CODE.SUCCESS)
+    .json(
+      STATUS_CODE.SUCCESS,
+      {},
+      RESPONSE_MESSAGES.PLAYLIST_DELETED_SUCCESFULLY
+    );
+});
 export {
   createPlaylist,
   getPlaylist,
@@ -346,4 +465,6 @@ export {
   deleteSongFromPlaylist,
   updatePlaylistDetails,
   getPublicPlaylist,
+  getPlaylistById,
+  deletePlaylist,
 };

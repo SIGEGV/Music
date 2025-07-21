@@ -21,6 +21,7 @@ const ERROR_MESSAGES = {
   NOT_AUTHORISED:
     "You Can Not Update This Playlist. This Playlist is not Public ",
   PLAYLIST_NOT_FOUND: "No Playlist Found",
+  INVALID_PLAYLIST_ID: "Invalid Playlist Id",
 };
 
 const STATUS_CODES = {

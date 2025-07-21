@@ -7,12 +7,12 @@ import {
   getUserSongs,
   homepageSongs,
   likeSong,
-  searchSong,
   unlikeSong,
   updateSongDetail,
   updateThumbnail,
   uploadAudio,
   getLikedSongs,
+  search,
 } from "../../controllers/v1/song.controller.js";
 import { isSongOwner } from "../../middlewares/isSongOwner.middleware.js";
 
@@ -33,7 +33,7 @@ router.route("/upload").post(
   uploadAudio
 );
 
-router.route("/search").get(verifyJWT, searchSong);
+router.route("/search").get(verifyJWT, search);
 router
   .route("/updateSong/:songId")
   .patch(verifyJWT, isSongOwner, updateSongDetail);

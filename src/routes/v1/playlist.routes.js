@@ -3,8 +3,10 @@ import { verifyJWT } from "../../middlewares/auth.middleware.js";
 import {
   addSongToPlaylist,
   createPlaylist,
+  deletePlaylist,
   deleteSongFromPlaylist,
   getPlaylist,
+  getPlaylistById,
   getPublicPlaylist,
   updatePlaylistDetails,
 } from "../../controllers/v1/playlist.controller.js";
@@ -40,6 +42,7 @@ router.route("/:playlistId/update").post(
   isPlaylistOwner,
   updatePlaylistDetails
 );
-
+router.route("/get/:playlistId").get(verifyJWT, getPlaylistById);
+router.route("/delete").delete(verifyJWT, isPlaylistOwner, deletePlaylist); // to implement
 router.route("/getPublicPlaylist").get(verifyJWT, getPublicPlaylist);
 export default router;

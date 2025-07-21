@@ -27,7 +27,7 @@ const RESPONSE_MESSAGES = {
   SONG_UPLOADED: "Song uploaded successfully.",
   SONG_UPDATED: "Song details updated successfully.",
   SONG_DELETED: "Song deleted successfully.",
-  SONG_FETCHED: "Song fetched successfully.",
+  SONG_FETCHED: "Song/User/Playlist fetched successfully.",
   SONG_LIKED: "Song liked successfully.",
   SONG_UNLIKED: "Song unliked successfully.",
   SONG_ALREADY_LIKED: "Song has already been liked.",
@@ -49,6 +49,7 @@ const RESPONSE_MESSAGES = {
   PLAYLIST_FETCHED: "Successfully fetched the playlist",
   PLAYLIST_UPDATED_SUCCESFULLY: "Succesfully Updated Playlist",
   SONG_ADDED_TO_PLAYLIST: "succesfully added songs to playlist",
+  PLAYLIST_DELETED_SUCCESFULLY: "Playlist Deleted Succesfully",
   // Views & Analytics
   SONG_VIEW_NOT_COUNTED: "Fetched song, but view was recently counted.",
   SONG_VIEW_COUNTED: "Fetched song and view was counted.",

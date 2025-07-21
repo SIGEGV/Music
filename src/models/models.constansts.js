@@ -1,4 +1,5 @@
 const USER_FIELDS = {
+  ID: "_id",
   USERNAME: "username",
   EMAIL: "email",
   FULLNAME: "fullname",
@@ -10,6 +11,7 @@ const USER_FIELDS = {
   REFRESH_TOKEN: "refreshToken",
 };
 const SONG_FIELDS = {
+  ID: "_id",
   SONG_FILE: "songFile",
   THUMBNAIL: "thumbnail",
   TITLE: "title",
@@ -24,11 +26,24 @@ const SONG_FIELDS = {
   VIEWED_BY_USER_ID: "viewedBy.userId",
   VIEWED_BY_LAST_VIEWED: "viewedBy.lastViewed",
 };
+
+const PLAYLIST_FIELDS = {
+  ID: "_id",
+  PLAYLIST_NAME: "playlist_name",
+  DESCRIPTION: "description",
+  IS_PUBLIC: "isPublic",
+  OWNER: "owner",
+  SONGS: "songs",
+  THUMBNAIL: "thumbnail",
+  CREATED_AT: "createdAt",
+  UPDATED_AT: "updatedAt",
+};
 const LIKED_HISTORY = {
   LIKED_SONGS: "likedSongs",
   USER_ID: "userId",
 };
 const PLAYLIST = {
+  ID: "_id",
   PLAYLIST_NAME: "playlist_name",
   DESCRIPTIONS: "description",
   IS_PUBLIC: "isPublic",
@@ -48,4 +63,11 @@ const SCHEMA_NAMES = {
   PLAYLIST: "PLAYLIST",
 };
 
-export { USER_FIELDS, SONG_FIELDS, SCHEMA_NAMES, LIKED_HISTORY, PLAYLIST };
+export {
+  USER_FIELDS,
+  SONG_FIELDS,
+  SCHEMA_NAMES,
+  LIKED_HISTORY,
+  PLAYLIST,
+  PLAYLIST_FIELDS,
+};

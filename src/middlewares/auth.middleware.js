@@ -25,11 +25,11 @@ export const verifyJWT = asyncHandler(async (req, _, next) => {
   const token =
     req.cookies?.accessToken ||
     req.header("Authorization")?.replace("Bearer ", "");
-  console.log("===== INCOMING REQUEST =====");
-  console.log("Method:", req.method);
-  console.log("URL:", req.originalUrl);
-  console.log("Token Extracted:", token);
-  console.log("============================");
+  // console.log("===== INCOMING REQUEST =====");
+  // console.log("Method:", req.method);
+  // console.log("URL:", req.originalUrl);
+  // console.log("Token Extracted:", token);
+  // console.log("============================");
   if (!token) {
     throw new apiError(
       STATUS_CODES.UNAUTHORIZED,
