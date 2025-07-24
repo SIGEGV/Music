@@ -11,6 +11,7 @@ import {
   updateUserDetail,
   verifyUserOtpAndRegister,
   loginUser,
+  getUserById,
 } from "../../controllers/v1/user.controller.js";
 import { upload } from "../../middlewares/multer.middleware.js";
 import { verifyJWT } from "../../middlewares/auth.middleware.js";
@@ -40,5 +41,5 @@ router
   .route("/update-avatar")
   .patch(verifyJWT, upload.single("avatar"), updateAvatar);
 router.route("/:userId/content").get(verifyJWT, getUserContent);
-
+router.route("/get/:Id").get(verifyJWT, getUserById);
 export default router;

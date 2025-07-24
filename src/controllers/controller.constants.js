@@ -118,7 +118,7 @@ const ERROR_MESSAGES = {
   INVALID_PLAYLIST_NAME: "Playlist Name is Required",
   FAILED_PLAYLIST_CREATION: "Failed to Create Playlist",
   INVALID_PLAYLIST_ID: "ENTER A VALID PLAYLIST ID",
-  PLAYLIST_NOT_FOUND: "This Playlist Doesn't Not Playlist Exist",
+  PLAYLIST_NOT_FOUND: "This Playlist Doesn't Exist",
   NO_FIELDS_GIVEN: "Atleast One Field is Required",
   // General Errors
   UPLOAD_THUMBNAIL_REQUIRED: "Upload the thumbnail file.",

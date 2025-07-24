@@ -5,6 +5,7 @@ import { uploadOnCloudinary } from "../../utils/Cloudinary.service.js";
 import { apiResponse } from "../../utils/apiResponse.js";
 import jwt from "jsonwebtoken";
 import { SONG } from "../../models/song.model.js";
+import { Playlist } from "../../models/playlist.model.js";
 import { OTP } from "../../models/otp.model.js";
 import otpGenerator from "otp-generator";
 import bcrypt from "bcrypt";
@@ -17,7 +18,11 @@ import {
   RESPONSE_MESSAGES,
   STATUS_CODE,
 } from "../controller.constants.js";
-import { SONG_FIELDS, USER_FIELDS } from "../../models/models.constansts.js";
+import {
+  PLAYLIST_FIELDS,
+  SONG_FIELDS,
+  USER_FIELDS,
+} from "../../models/models.constansts.js";
 /**
  * Generates access and refresh tokens for a user.
  *
@@ -614,6 +619,48 @@ const getWatchHistory = asyncHandler(async (req, res) => {
     );
 });
 
+const getUserById = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+  const { Id } = req.params;
+  if (!userId || userId === "") {
+    throw new apiError(
+      STATUS_CODE.UNAUTHORIZED,
+      ERROR_MESSAGES.UNAUTHORIZED_REQUEST
+    );
+  }
+  const User = await USER.findById(Id).select(
+    `${USER_FIELDS.USERNAME} ${USER_FIELDS.FULLNAME} ${USER_FIELDS.AVATAR} ${USER_FIELDS.CREATED_AT}`
+  );
+  const userSongs = await SONG.find({ owner: Id }).select(
+    `${SONG_FIELDS.TITLE} ${SONG_FIELDS.DESCRIPTION} ${SONG_FIELDS.THUMBNAIL} ${SONG_FIELDS.SONG_FILE} ${SONG_FIELDS.CREATED_AT}`
+  );
+  const playlist = await Playlist.find({ owner: Id })
+    .select(
+      `${PLAYLIST_FIELDS.PLAYLIST_NAME} ${PLAYLIST_FIELDS.DESCRIPTION} ${PLAYLIST_FIELDS.SONGS} ${PLAYLIST_FIELDS.THUMBNAIL} ${PLAYLIST_FIELDS.OWNER}`
+    )
+    .populate({
+      path: `${PLAYLIST_FIELDS.OWNER}`,
+      select: `${USER_FIELDS.FULLNAME} ${USER_FIELDS.AVATAR} ${USER_FIELDS.USERNAME}`,
+    })
+    .populate({
+      path: `${PLAYLIST_FIELDS.SONGS}`,
+      select: `${SONG_FIELDS.SONG_FILE} ${SONG_FIELDS.TITLE} ${SONG_FIELDS.THUMBNAIL}`,
+    });
+  const user = {
+    Details: User,
+    Songs: userSongs,
+    Playlist: playlist,
+  };
+  res
+    .status(STATUS_CODE.SUCCESS)
+    .json(
+      new apiResponse(
+        STATUS_CODE.SUCCESS,
+        { user },
+        RESPONSE_MESSAGES.USER_FETCHED
+      )
+    );
+});
 export {
   registerUser,
   loginUser,
@@ -626,4 +673,5 @@ export {
   getUserContent,
   verifyUserOtpAndRegister,
   getWatchHistory,
+  getUserById,
 };

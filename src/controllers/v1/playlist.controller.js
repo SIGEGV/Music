@@ -266,8 +266,12 @@ const deleteSongFromPlaylist = asyncHandler(async (req, res) => {
  * @returns {Object} 200 - Returns the updated playlist and a success message
  */
 const updatePlaylistDetails = asyncHandler(async (req, res) => {
-  const { playlist_name, description, isPublic } = req.body;
+  let { playlist_name, description, isPublic } = req.body;
   const { playlistId } = req.params;
+  if (typeof isPublic === "string") {
+    isPublic = isPublic.toLowerCase() === "true";
+  }
+
   const thumbanilLocalFilePath = req.files?.thumbnail?.[0]?.path;
   if (
     !playlist_name &&
@@ -372,7 +376,7 @@ const getPublicPlaylist = asyncHandler(async (req, res) => {
  * @returns {apiResponse} 200 OK with playlist data
  */
 const getPlaylistById = asyncHandler(async (req, res) => {
-  const { userId } = req.body;
+  const userId = req.user._id;
   if (!userId || userId === "") {
     throw new apiError(
       STATUS_CODE.UNAUTHORIZED,
@@ -395,7 +399,11 @@ const getPlaylistById = asyncHandler(async (req, res) => {
     )
     .populate({
       path: PLAYLIST_FIELDS.SONGS,
-      select: `${SONG_FIELDS.TITLE} ${SONG_FIELDS.THUMBNAIL} ${SONG_FIELDS.SONG_FILE}`,
+      select: `${SONG_FIELDS.TITLE} ${SONG_FIELDS.THUMBNAIL} ${SONG_FIELDS.SONG_FILE} ${SONG_FIELDS.OWNER}`,
+      populate: {
+        path: SONG_FIELDS.OWNER,
+        select: `${USER_FIELDS.USERNAME} ${USER_FIELDS.FULLNAME}`,
+      },
     })
     .populate({
       path: PLAYLIST_FIELDS.OWNER,

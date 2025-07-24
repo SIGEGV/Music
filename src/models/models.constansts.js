@@ -9,6 +9,8 @@ const USER_FIELDS = {
   WATCH_HISTORY_WATCHED_AT: "watchHistory.watchedAt",
   PASSWORD: "password",
   REFRESH_TOKEN: "refreshToken",
+  CREATED_AT: "createdAt",
+  UPDATED_AT: "updatedAt",
 };
 const SONG_FIELDS = {
   ID: "_id",
@@ -25,6 +27,7 @@ const SONG_FIELDS = {
   VIEWED_BY: "viewedBy",
   VIEWED_BY_USER_ID: "viewedBy.userId",
   VIEWED_BY_LAST_VIEWED: "viewedBy.lastViewed",
+  CREATED_AT: "createdAt",
 };
 
 const PLAYLIST_FIELDS = {

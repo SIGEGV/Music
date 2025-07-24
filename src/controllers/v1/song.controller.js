@@ -118,7 +118,7 @@ const uploadAudio = asyncHandler(async (req, res) => {
  * @group Song - Operations related to song management
  * @param {Object} req - The request object containing the search parameters.
  * @param {Object} res - The response object containing the search results.
- * @returns {Array} 200 - A list of songs matching the search query.
+ * @returns {Array} 200 - A list of songs/users/playlist matching the search query.
  * @returns {Object} 401 - Unauthorized access if JWT is invalid.
  * @example
  * GET /search?q=love
@@ -143,9 +143,14 @@ const search = asyncHandler(async (req, res) => {
 
   const playlist = await Playlist.find({
     playlist_name: { $regex: q, $options: "i" },
-  }).select(
-    `${PLAYLIST_FIELDS.PLAYLIST_NAME} ${PLAYLIST_FIELDS.ID} ${PLAYLIST_FIELDS.THUMBNAIL}`
-  );
+  })
+    .select(
+      `${PLAYLIST_FIELDS.PLAYLIST_NAME} ${PLAYLIST_FIELDS.ID} ${PLAYLIST_FIELDS.THUMBNAIL} ${PLAYLIST_FIELDS.OWNER} ${PLAYLIST_FIELDS.IS_PUBLIC} ${PLAYLIST_FIELDS.SONGS}`
+    )
+    .populate({
+      path: PLAYLIST_FIELDS.OWNER,
+      select: `${USER_FIELDS.USERNAME}`,
+    });
   return res
     .status(STATUS_CODE.SUCCESS)
     .json(
