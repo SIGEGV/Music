@@ -619,6 +619,16 @@ const getWatchHistory = asyncHandler(async (req, res) => {
     );
 });
 
+/**
+ * @route GET /api/v1/users/get/:Id
+ * @group User - Operations related to user data retrieval
+ * @param {Object} req.user - The authenticated user's details from the JWT
+ * @param {string} req.params.Id - The ID of the user whose profile is to be fetched
+ * @returns {Object} 200 - Successfully fetched the user's profile, songs, and playlists
+ * @returns {Error} 401 - Unauthorized request
+ * @returns {Error} 404 - User not found
+ * @description Fetches a user's profile details, uploaded songs, and playlists based on the provided user ID.
+ */
 const getUserById = asyncHandler(async (req, res) => {
   const userId = req.user._id;
   const { Id } = req.params;
