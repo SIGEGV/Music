@@ -75,7 +75,7 @@
 ---
 
 ## 📖 API Reference
-See the full API documentation in [`APIdoc.txt`](./APIdoc.txt).
+See the full API documentation in [`APIdoc.txt`](./APIdoc.md).
 
 ---
 
